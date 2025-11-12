@@ -25,15 +25,15 @@ export default function Login() {
       return
     }
 
-    // الآن نجلب الدور (role) من جدول clients
+    // الآن نجلب الدور (role) من جدول users
     const { data: userData, error: userError } = await supabase
-      .from('clients')
+      .from('users')
       .select('role')
       .eq('email', email)
       .single()
 
     if (userError) {
-      setError('User not found in clients table')
+      setError('User not found in users table')
       setLoading(false)
       return
     }
