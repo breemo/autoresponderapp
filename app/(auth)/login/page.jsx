@@ -30,16 +30,13 @@ export default function LoginPage() {
     return
   }
 
-  setMessage(`✅ تم تسجيل الدخول كـ ${data.role}`)
-  localStorage.setItem('user', JSON.stringify(data))
+localStorage.setItem('user', JSON.stringify(data))
+if (data.role === 'admin') {
+  router.push('/admin')
+} else {
+  router.push('/client')
+}
 
-  setTimeout(() => {
-    if (data.role === 'admin') {
-      router.push('/admin')
-    } else {
-      router.push('/client')
-    }
-  }, 1000)
 }
 
 
