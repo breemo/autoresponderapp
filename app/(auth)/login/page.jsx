@@ -13,45 +13,38 @@ export default function Login() {
     setLoading(true)
     setError('')
 
-    try {
-      // تسجيل الدخول عبر Supabase
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
 
-      if (loginError) {
-        setError('❌ خطأ في تسجيل الدخول: ' + loginError.message)
-        setLoading(false)
-        return
-      }
+    if (loginError) {
+      setError('خطأ في تسجيل الدخول: ' + loginError.message)
+      setLoading(false)
+      return
+    }
 
-      // فحص الدور من جدول users
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('email', email)
-        .single()
+    // التأكد من الجدول
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('email', email)
+      .single()
 
-      if (userError || !userData) {
-        setError('⚠️ الحساب غير موجود في قاعدة البيانات.')
-        setLoading(false)
-        return
-      }
+    if (userError || !userData) {
+      setError('هذا الحساب غير موجود في قاعدة البيانات.')
+      setLoading(false)
+      return
+    }
 
-      alert('✅ تم تسجيل الدخول كـ ' + userData.role)
-
-      // 🚀 التوجيه الصريح بالقوة
-      if (userData.role === 'admin') {
-        window.location.replace('/admin')
-      } else if (userData.role === 'client') {
-        window.location.replace('/client')
-      } else {
-        setError('⚠️ لا توجد صلاحية صالحة لهذا الحساب.')
-      }
-    } catch (err) {
-      console.error(err)
-      setError('حدث خطأ غير متوقع.')
+    // ✅ تحويل فعلي بالقوة
+    const role = userData.role
+    if (role === 'admin') {
+      window.location.assign('/admin')
+    } else if (role === 'client') {
+      window.location.assign('/client')
+    } else {
+      setError('لا توجد صلاحية صالحة لهذا الحساب.')
     }
 
     setLoading(false)
