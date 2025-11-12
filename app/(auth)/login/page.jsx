@@ -21,13 +21,10 @@ export default function Login() {
       })
 
       if (loginError) {
-        console.error('❌ Auth error:', loginError)
         alert('خطأ في تسجيل الدخول: ' + loginError.message)
         setLoading(false)
         return
       }
-
-      console.log('✅ Auth success, checking users table...')
 
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -36,27 +33,25 @@ export default function Login() {
         .single()
 
       if (userError || !userData) {
-        console.error('⚠️ users query error:', userError)
         alert('الحساب غير موجود في قاعدة البيانات.')
         setLoading(false)
         return
       }
 
-      console.log('🔸 User role:', userData.role)
-      alert('✅ تم تسجيل الدخول كـ ' + userData.role)
+      const role = userData.role
+      alert('✅ تم تسجيل الدخول كـ ' + role)
 
-      if (userData.role === 'admin') {
-        console.log('➡️ redirect to /admin')
-        window.location.href = '/admin'
-      } else if (userData.role === 'client') {
-        console.log('➡️ redirect to /client')
-        window.location.href = '/client'
-      } else {
-        alert('⚠️ لا توجد صلاحية صالحة لهذا الحساب.')
-      }
+      // ✅ تحويل أكيد بعد نصف ثانية
+      setTimeout(() => {
+        if (role === 'admin') {
+          window.location.replace('/admin')
+        } else if (role === 'client') {
+          window.location.replace('/client')
+        }
+      }, 500)
     } catch (err) {
-      console.error('💥 unexpected error:', err)
       alert('حدث خطأ غير متوقع.')
+      console.error(err)
     }
 
     setLoading(false)
