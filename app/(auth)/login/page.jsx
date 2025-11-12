@@ -1,59 +1,51 @@
 'use client'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation'
+import { redirect } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
-  const router = useRouter()
 
   const handleLogin = async (e) => {
-  e.preventDefault()
+    e.preventDefault()
 
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('email', email.trim())
-    .maybeSingle()
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email.trim())
+      .maybeSingle()
 
-  console.log('USER:', data, 'ERROR:', error) // 👈 أضف هذا السطر
+    console.log('USER:', data, 'ERROR:', error)
 
-  if (error || !data) {
-    setMessage('❌ المستخدم غير موجود')
-    return
+    if (error || !data) {
+      setMessage('❌ المستخدم غير موجود')
+      return
+    }
+
+    if (data.password?.trim() !== password.trim()) {
+      setMessage('❌ كلمة المرور غير صحيحة')
+      return
+    }
+
+    localStorage.setItem('user', JSON.stringify(data))
+
+    // ✅ بدل router.push نستخدم redirect
+    if (data.role === 'admin') {
+      redirect('/admin')
+    } else {
+      redirect('/client')
+    }
   }
-
-  if (data.password?.trim() !== password.trim()) {
-    setMessage('❌ كلمة المرور غير صحيحة')
-    return
-  }
-
-localStorage.setItem('user', JSON.stringify(data))
-if (data.role === 'admin') {
-  router.push('/admin')
-} else {
-  router.push('/client')
-}
-
-}
-
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white shadow-md rounded-lg px-8 py-6 w-96"
-      >
-        <h2 className="text-2xl font-bold mb-4 text-center">
-          Auto Responder Login
-        </h2>
+      <form onSubmit={handleLogin} className="bg-white shadow-md rounded-lg px-8 py-6 w-96">
+        <h2 className="text-2xl font-bold mb-4 text-center">Auto Responder Login</h2>
 
         {message && (
-          <p className="text-center mb-3 font-semibold text-green-600">
-            {message}
-          </p>
+          <p className="text-center mb-3 font-semibold text-green-600">{message}</p>
         )}
 
         <input
@@ -63,7 +55,6 @@ if (data.role === 'admin') {
           onChange={(e) => setEmail(e.target.value)}
           className="w-full mb-3 px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-300"
         />
-
         <input
           type="password"
           placeholder="Password"
