@@ -12,23 +12,44 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault()
 
-    const { data: user, error } = await supabase
-      .from('users') // غيّرها حسب اسم الجدول الحقيقي
+   // const { data: user, error } = await supabase
+    //  .from('users') // غيّرها حسب اسم الجدول الحقيقي
+    //  .select('*')
+   //   //.eq('email', email)
+   //   //.eq('password', password)
+    //  .ilike('email', email.trim())
+     // .ilike('password', password.trim())
+     // .single()
+
+      //console.log("USER DATA:", user, "ERROR:", error)
+
+
+    //if (error || !user) {
+   //   setMessage('❌ بيانات الدخول غير صحيحة')
+   //   return
+   // }
+
+
+
+    const { data, error } = await supabase
+      .from('users')
       .select('*')
-      //.eq('email', email)
-      //.eq('password', password)
-      .ilike('email', email.trim())
-      .ilike('password', password.trim())
-      .single()
+      .eq('email', email.trim())
+      .maybeSingle()
 
-      console.log("USER DATA:", user, "ERROR:", error)
-
-
-    if (error || !user) {
-      setMessage('❌ بيانات الدخول غير صحيحة')
+    if (error || !data) {
+      setMessage('❌ المستخدم غير موجود')
+      return
+    }
+    
+    if (data.password?.trim() !== password.trim()) {
+      setMessage('❌ كلمة المرور غير صحيحة')
       return
     }
 
+
+
+    
     setMessage(`✅ تم تسجيل الدخول كـ ${user.role}`)
 
     // ✅ نحفظ اليوزر بالـ localStorage
