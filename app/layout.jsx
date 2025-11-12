@@ -1,14 +1,17 @@
-import './globals.css'
-
 export const metadata = {
   title: 'Auto Responder App',
-  description: 'Admin and Client Dashboard for Auto-Responder System',
+  description: 'Automated replies for clients',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-800">{children}</body>
+      <body>{children}</body>
     </html>
   )
 }
