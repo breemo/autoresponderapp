@@ -1,70 +1,56 @@
 'use client'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { useRouter } from 'next/navigation'
 
-export default function Login() {
+export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const router = useRouter()
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    setLoading(true)
-    setMessage('')
 
-    const { error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (loginError) {
-      setMessage('❌ خطأ في تسجيل الدخول: ' + loginError.message)
-      setLoading(false)
-      return
-    }
-
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
+    const { data: user, error } = await supabase
+      .from('clients')
+      .select('*')
       .eq('email', email)
+      .eq('password', password)
       .single()
 
-    if (userError || !userData) {
-      setMessage('⚠️ المستخدم غير موجود في قاعدة البيانات')
-      setLoading(false)
+    if (error || !user) {
+      setMessage('❌ بيانات الدخول غير صحيحة')
       return
     }
 
-    const role = userData.role
-    setMessage(`✅ تم تسجيل الدخول كـ ${role}`)
+    setMessage(`✅ تم تسجيل الدخول كـ ${user.role}`)
 
-    // ✅ دالة تحول للمسار الصحيح بناءً على موقع الصفحة الحالي
-    const goTo = (path) => {
-      const base = window.location.origin
-      const normalizedPath = path.startsWith('/') ? path : `/${path}`
-      window.location.assign(`${base}${normalizedPath}`)
-    }
+    // ✅ نحفظ اليوزر بالـ localStorage
+    localStorage.setItem('user', JSON.stringify(user))
 
-    setTimeout(async () => {
-      const form = new FormData()
-      form.append('role', role)
-      await fetch('/login', { method: 'POST', body: form })
-    }, 500)
-
-    setLoading(false)
+    // ✅ نحول حسب الصلاحية
+    setTimeout(() => {
+      if (user.role === 'admin') {
+        router.push('/admin')
+      } else {
+        router.push('/client')
+      }
+    }, 1000)
   }
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center">Auto Responder Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white shadow-md rounded-lg px-8 py-6 w-96"
+      >
+        <h2 className="text-2xl font-bold mb-4 text-center">
+          Auto Responder Login
+        </h2>
 
         {message && (
-          <p
-            className={`mb-4 text-center ${
-              message.startsWith('✅') ? 'text-green-600' : 'text-red-600'
-            }`}
-          >
+          <p className="text-center mb-3 text-green-600 font-semibold">
             {message}
           </p>
         )}
@@ -74,24 +60,22 @@ export default function Login() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="border p-2 w-full mb-4 rounded"
-          required
+          className="w-full mb-3 px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-300"
         />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="border p-2 w-full mb-4 rounded"
-          required
+          className="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-300"
         />
 
         <button
           type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
         >
-          {loading ? '... جاري تسجيل الدخول' : 'Login'}
+          Login
         </button>
       </form>
     </div>
