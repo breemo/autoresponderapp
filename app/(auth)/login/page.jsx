@@ -45,10 +45,10 @@ export default function Login() {
 setTimeout(() => {
   if (role === 'admin') {
     console.log('➡️ redirecting to /admin...')
-    window.location.href = `${window.location.origin}/admin`
+    window.location.href = window.location.origin + '/admin`
   } else if (role === 'client') {
     console.log('➡️ redirecting to /client...')
-    window.location.href = `${window.location.origin}/client`
+    window.location.href = window.location.origin + '/client`
   }
 }, 800)
 
