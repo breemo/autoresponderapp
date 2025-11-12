@@ -1,10 +1,8 @@
 'use client'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation'
 
 export default function Login() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -40,18 +38,22 @@ export default function Login() {
     const role = userData.role
     setMessage(`✅ تم تسجيل الدخول كـ ${role}`)
 
-    // ⏳ تأخير بسيط ثم redirect فعلي باستخدام router
-// بدل setTimeout(...) القديم
-setTimeout(() => {
-  if (role === 'admin') {
-    console.log('➡️ redirecting to /admin...')
-    window.location.href = window.location.origin + '/admin`
-  } else if (role === 'client') {
-    console.log('➡️ redirecting to /client...')
-    window.location.href = window.location.origin + '/client`
-  }
-}, 800)
+    // ✅ دالة تحول للمسار الصحيح بناءً على موقع الصفحة الحالي
+    const goTo = (path) => {
+      const base = window.location.origin
+      const normalizedPath = path.startsWith('/') ? path : `/${path}`
+      window.location.assign(`${base}${normalizedPath}`)
+    }
 
+    setTimeout(() => {
+      if (role === 'admin') {
+        console.log('➡️ redirecting to /admin...')
+        goTo('admin')
+      } else if (role === 'client') {
+        console.log('➡️ redirecting to /client...')
+        goTo('client')
+      }
+    }, 800)
 
     setLoading(false)
   }
