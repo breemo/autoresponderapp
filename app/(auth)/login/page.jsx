@@ -1,53 +1,57 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function Login() {
-  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState('')
 
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-    setSuccess('')
 
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
+    try {
+      // تسجيل الدخول عبر Supabase
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (loginError) {
-      setError('خطأ في تسجيل الدخول: ' + loginError.message)
-      setLoading(false)
-      return
-    }
+      if (loginError) {
+        setError('❌ خطأ في تسجيل الدخول: ' + loginError.message)
+        setLoading(false)
+        return
+      }
 
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('email', email)
-      .single()
+      // فحص الدور من جدول users
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('email', email)
+        .single()
 
-    if (userError || !userData) {
-      setError('الحساب غير موجود في قاعدة البيانات.')
-      setLoading(false)
-      return
-    }
+      if (userError || !userData) {
+        setError('⚠️ الحساب غير موجود في قاعدة البيانات.')
+        setLoading(false)
+        return
+      }
 
-    const role = userData.role
-    setSuccess('تم تسجيل الدخول بنجاح ✅')
+      alert('✅ تم تسجيل الدخول كـ ' + userData.role)
 
-    // ✅ التوجيه الإجباري (حل نهائي)
-    if (typeof window !== 'undefined') {
-      if (role === 'admin') window.location.href = '/admin'
-      else if (role === 'client') window.location.href = '/client'
-      else setError('لا توجد صلاحية صالحة لهذا الحساب.')
+      // 🚀 التوجيه الصريح بالقوة
+      if (userData.role === 'admin') {
+        window.location.replace('/admin')
+      } else if (userData.role === 'client') {
+        window.location.replace('/client')
+      } else {
+        setError('⚠️ لا توجد صلاحية صالحة لهذا الحساب.')
+      }
+    } catch (err) {
+      console.error(err)
+      setError('حدث خطأ غير متوقع.')
     }
 
     setLoading(false)
@@ -59,7 +63,6 @@ export default function Login() {
         <h2 className="text-2xl font-bold mb-6 text-center">Auto Responder Login</h2>
 
         {error && <p className="text-red-500 text-center mb-3">{error}</p>}
-        {success && <p className="text-green-600 text-center mb-3">{success}</p>}
 
         <input
           type="email"
@@ -67,6 +70,7 @@ export default function Login() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="border p-2 w-full mb-4 rounded"
+          required
         />
         <input
           type="password"
@@ -74,6 +78,7 @@ export default function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="border p-2 w-full mb-4 rounded"
+          required
         />
 
         <button
