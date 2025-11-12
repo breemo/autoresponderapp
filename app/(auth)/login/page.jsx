@@ -49,14 +49,18 @@ export default function Login() {
     console.log('🔸 User role:', userData.role)
 
     if (userData.role === 'admin') {
-      setSuccess('تسجيل دخول كأدمن ✅')
-      router.push('/admin')
-    } else if (userData.role === 'client') {
-      setSuccess('تسجيل دخول كعميل ✅')
-      router.push('/client')
-    } else {
-      setError('لا توجد صلاحية صالحة لهذا الحساب.')
-    }
+  setSuccess('تسجيل دخول كأدمن ✅')
+  setTimeout(() => {
+    router.replace('/admin')   // 🔁 replace بدل push عشان يضمن النقل
+    }, 800) // تأخير بسيط 0.8 ثانية لعرض الرسالة
+  } else if (userData.role === 'client') {
+    setSuccess('تسجيل دخول كعميل ✅')
+    setTimeout(() => {
+      router.replace('/client')
+    }, 800)
+  } else {
+    setError('لا توجد صلاحية صالحة لهذا الحساب.')
+  }
 
     setLoading(false)
   }
