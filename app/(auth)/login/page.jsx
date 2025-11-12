@@ -10,41 +10,53 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault()
+    console.log('🔹 Start login')
     setLoading(true)
     setError('')
 
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
+    try {
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (loginError) {
-      setError('خطأ في تسجيل الدخول: ' + loginError.message)
-      setLoading(false)
-      return
-    }
+      if (loginError) {
+        console.error('❌ Auth error:', loginError)
+        alert('خطأ في تسجيل الدخول: ' + loginError.message)
+        setLoading(false)
+        return
+      }
 
-    // التأكد من الجدول
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('email', email)
-      .single()
+      console.log('✅ Auth success, checking users table...')
 
-    if (userError || !userData) {
-      setError('هذا الحساب غير موجود في قاعدة البيانات.')
-      setLoading(false)
-      return
-    }
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('email', email)
+        .single()
 
-    // ✅ تحويل فعلي بالقوة
-    const role = userData.role
-    if (role === 'admin') {
-      window.location.assign('/admin')
-    } else if (role === 'client') {
-      window.location.assign('/client')
-    } else {
-      setError('لا توجد صلاحية صالحة لهذا الحساب.')
+      if (userError || !userData) {
+        console.error('⚠️ users query error:', userError)
+        alert('الحساب غير موجود في قاعدة البيانات.')
+        setLoading(false)
+        return
+      }
+
+      console.log('🔸 User role:', userData.role)
+      alert('✅ تم تسجيل الدخول كـ ' + userData.role)
+
+      if (userData.role === 'admin') {
+        console.log('➡️ redirect to /admin')
+        window.location.href = '/admin'
+      } else if (userData.role === 'client') {
+        console.log('➡️ redirect to /client')
+        window.location.href = '/client'
+      } else {
+        alert('⚠️ لا توجد صلاحية صالحة لهذا الحساب.')
+      }
+    } catch (err) {
+      console.error('💥 unexpected error:', err)
+      alert('حدث خطأ غير متوقع.')
     }
 
     setLoading(false)
