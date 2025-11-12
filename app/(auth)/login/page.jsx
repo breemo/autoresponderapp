@@ -13,11 +13,12 @@ export default function LoginPage() {
     e.preventDefault()
 
     const { data: user, error } = await supabase
-      .from('clients')
+      .from('users') // غيّرها حسب اسم الجدول الحقيقي
       .select('*')
       .eq('email', email)
       .eq('password', password)
       .single()
+
 
     if (error || !user) {
       setMessage('❌ بيانات الدخول غير صحيحة')
