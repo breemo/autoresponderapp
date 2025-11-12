@@ -41,10 +41,17 @@ export default function Login() {
     setMessage(`✅ تم تسجيل الدخول كـ ${role}`)
 
     // ⏳ تأخير بسيط ثم redirect فعلي باستخدام router
-    setTimeout(() => {
-      if (role === 'admin') router.push('/admin')
-      else if (role === 'client') router.push('/client')
-    }, 800)
+// بدل setTimeout(...) القديم
+setTimeout(() => {
+  if (role === 'admin') {
+    console.log('➡️ redirecting to /admin...')
+    window.location.href = `${window.location.origin}/admin`
+  } else if (role === 'client') {
+    console.log('➡️ redirecting to /client...')
+    window.location.href = `${window.location.origin}/client`
+  }
+}, 800)
+
 
     setLoading(false)
   }
