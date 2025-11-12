@@ -10,35 +10,38 @@ export default function LoginPage() {
   const router = useRouter()
 
   const handleLogin = async (e) => {
-    e.preventDefault()
+  e.preventDefault()
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email.trim())
-      .maybeSingle()
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('email', email.trim())
+    .maybeSingle()
 
-    if (error || !data) {
-      setMessage('❌ المستخدم غير موجود')
-      return
-    }
+  console.log('USER:', data, 'ERROR:', error) // 👈 أضف هذا السطر
 
-    if (data.password?.trim() !== password.trim()) {
-      setMessage('❌ كلمة المرور غير صحيحة')
-      return
-    }
-
-    setMessage(`✅ تم تسجيل الدخول كـ ${data.role}`)
-    localStorage.setItem('user', JSON.stringify(data))
-
-    setTimeout(() => {
-      if (data.role === 'admin') {
-        router.push('/admin')
-      } else {
-        router.push('/client')
-      }
-    }, 1000)
+  if (error || !data) {
+    setMessage('❌ المستخدم غير موجود')
+    return
   }
+
+  if (data.password?.trim() !== password.trim()) {
+    setMessage('❌ كلمة المرور غير صحيحة')
+    return
+  }
+
+  setMessage(`✅ تم تسجيل الدخول كـ ${data.role}`)
+  localStorage.setItem('user', JSON.stringify(data))
+
+  setTimeout(() => {
+    if (data.role === 'admin') {
+      router.push('/admin')
+    } else {
+      router.push('/client')
+    }
+  }, 1000)
+}
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
