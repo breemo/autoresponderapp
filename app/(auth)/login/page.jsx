@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -9,61 +9,53 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState('')
+  const [role, setRole] = useState(null)
 
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-    setSuccess('')
+    setRole(null)
 
-    console.log('🔹 Trying login with:', email)
+    try {
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
 
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
+      if (loginError) {
+        setError('خطأ في تسجيل الدخول: ' + loginError.message)
+        setLoading(false)
+        return
+      }
 
-    if (loginError) {
-      console.error('❌ Login error:', loginError)
-      setError('خطأ في تسجيل الدخول: ' + loginError.message)
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('email', email)
+        .single()
+
+      if (userError || !userData) {
+        setError('الحساب غير موجود في قاعدة البيانات.')
+        setLoading(false)
+        return
+      }
+
+      setRole(userData.role) // نخزن الدور لنستخدمه في useEffect
       setLoading(false)
-      return
-    }
-
-    console.log('✅ Login success, checking role...')
-
-    const { data: userData, error: userError } = await supabase
-      .from('users') // تأكدنا نستخدم الجدول الصحيح
-      .select('role')
-      .eq('email', email)
-      .single()
-
-    if (userError || !userData) {
-      console.error('⚠️ User not found in users table:', userError)
-      setError('الحساب غير موجود في قاعدة البيانات أو غير مفعّل.')
+    } catch (err) {
+      console.error(err)
+      setError('حدث خطأ غير متوقع.')
       setLoading(false)
-      return
     }
-
-    console.log('🔸 User role:', userData.role)
-
-    if (userData.role === 'admin') {
-  setSuccess('تسجيل دخول كأدمن ✅')
-  setTimeout(() => {
-    router.replace('/admin')   // 🔁 replace بدل push عشان يضمن النقل
-    }, 800) // تأخير بسيط 0.8 ثانية لعرض الرسالة
-  } else if (userData.role === 'client') {
-    setSuccess('تسجيل دخول كعميل ✅')
-    setTimeout(() => {
-      router.replace('/client')
-    }, 800)
-  } else {
-    setError('لا توجد صلاحية صالحة لهذا الحساب.')
   }
 
-    setLoading(false)
-  }
+  // 👇 التوجيه يحدث هنا بمجرد تغيير role
+  useEffect(() => {
+    if (!role) return
+    if (role === 'admin') router.replace('/admin')
+    if (role === 'client') router.replace('/client')
+  }, [role, router])
 
   return (
     <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -71,7 +63,7 @@ export default function Login() {
         <h2 className="text-2xl font-bold mb-6 text-center">Auto Responder Login</h2>
 
         {error && <p className="text-red-500 text-center mb-3">{error}</p>}
-        {success && <p className="text-green-600 text-center mb-3">{success}</p>}
+        {role && <p className="text-green-600 text-center mb-3">تسجيل دخول كـ{role === 'admin' ? ' أدمن ✅' : ' عميل ✅'}</p>}
 
         <input
           type="email"
