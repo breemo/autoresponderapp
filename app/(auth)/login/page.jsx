@@ -45,15 +45,11 @@ export default function Login() {
       window.location.assign(`${base}${normalizedPath}`)
     }
 
-    setTimeout(() => {
-      if (role === 'admin') {
-        console.log('➡️ redirecting to /admin...')
-        goTo('admin')
-      } else if (role === 'client') {
-        console.log('➡️ redirecting to /client...')
-        goTo('client')
-      }
-    }, 800)
+    setTimeout(async () => {
+      const form = new FormData()
+      form.append('role', role)
+      await fetch('/login', { method: 'POST', body: form })
+    }, 500)
 
     setLoading(false)
   }
