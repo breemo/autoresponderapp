@@ -15,9 +15,13 @@ export default function LoginPage() {
     const { data: user, error } = await supabase
       .from('users') // غيّرها حسب اسم الجدول الحقيقي
       .select('*')
-      .eq('email', email)
-      .eq('password', password)
+      //.eq('email', email)
+      //.eq('password', password)
+      .ilike('email', email.trim())
+      .ilike('password', password.trim())
       .single()
+
+      console.log("USER DATA:", user, "ERROR:", error)
 
 
     if (error || !user) {
