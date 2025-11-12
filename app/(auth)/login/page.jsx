@@ -37,17 +37,24 @@ export default function Login() {
         return
       }
 
-      alert(`✅ تم تسجيل الدخول كـ ${userData.role}`)
+      const role = userData.role
+      alert(`✅ تم تسجيل الدخول كـ ${role}`)
 
-      // ✅ استخدم router بدل window.location
-      if (userData.role === 'admin') {
-        router.push('/admin')
-      } else if (userData.role === 'client') {
-        router.push('/client')
-      }
+      // ✅ تحويل مؤجل بعد alert
+      setTimeout(() => {
+        if (role === 'admin') {
+          console.log('🔁 redirecting to /admin...')
+          window.location.assign('/admin')
+        } else if (role === 'client') {
+          console.log('🔁 redirecting to /client...')
+          window.location.assign('/client')
+        } else {
+          alert('⚠️ صلاحية غير معروفة!')
+        }
+      }, 300)
     } catch (err) {
-      alert('حدث خطأ غير متوقع')
       console.error(err)
+      alert('حدث خطأ غير متوقع')
     }
 
     setLoading(false)
