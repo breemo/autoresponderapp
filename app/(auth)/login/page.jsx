@@ -33,10 +33,11 @@ export default function LoginPage() {
 
     // ✅ بدل router.push نستخدم redirect
     if (data.role === 'admin') {
-      redirect('/admin')
+      window.location.href = '/admin'
     } else {
-      redirect('/client')
-    }
+      window.location.href = '/client'
+}
+
   }
 
   return (
