@@ -12,25 +12,6 @@ export default function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault()
 
-   // const { data: user, error } = await supabase
-    //  .from('users') // غيّرها حسب اسم الجدول الحقيقي
-    //  .select('*')
-   //   //.eq('email', email)
-   //   //.eq('password', password)
-    //  .ilike('email', email.trim())
-     // .ilike('password', password.trim())
-     // .single()
-
-      //console.log("USER DATA:", user, "ERROR:", error)
-
-
-    //if (error || !user) {
-   //   setMessage('❌ بيانات الدخول غير صحيحة')
-   //   return
-   // }
-
-
-
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -41,23 +22,17 @@ export default function LoginPage() {
       setMessage('❌ المستخدم غير موجود')
       return
     }
-    
+
     if (data.password?.trim() !== password.trim()) {
       setMessage('❌ كلمة المرور غير صحيحة')
       return
     }
 
+    setMessage(`✅ تم تسجيل الدخول كـ ${data.role}`)
+    localStorage.setItem('user', JSON.stringify(data))
 
-
-    
-    setMessage(`✅ تم تسجيل الدخول كـ ${user.role}`)
-
-    // ✅ نحفظ اليوزر بالـ localStorage
-    localStorage.setItem('user', JSON.stringify(user))
-
-    // ✅ نحول حسب الصلاحية
     setTimeout(() => {
-      if (user.role === 'admin') {
+      if (data.role === 'admin') {
         router.push('/admin')
       } else {
         router.push('/client')
@@ -76,7 +51,7 @@ export default function LoginPage() {
         </h2>
 
         {message && (
-          <p className="text-center mb-3 text-green-600 font-semibold">
+          <p className="text-center mb-3 font-semibold text-green-600">
             {message}
           </p>
         )}
