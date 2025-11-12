@@ -1,18 +1,17 @@
 'use client'
 import { useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
+import { useRouter } from 'next/navigation'
 
 export default function Login() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    console.log('🔹 Start login')
     setLoading(true)
-    setError('')
 
     try {
       const { error: loginError } = await supabase.auth.signInWithPassword({
@@ -21,7 +20,7 @@ export default function Login() {
       })
 
       if (loginError) {
-        alert('خطأ في تسجيل الدخول: ' + loginError.message)
+        alert('❌ خطأ في تسجيل الدخول: ' + loginError.message)
         setLoading(false)
         return
       }
@@ -33,24 +32,21 @@ export default function Login() {
         .single()
 
       if (userError || !userData) {
-        alert('الحساب غير موجود في قاعدة البيانات.')
+        alert('⚠️ المستخدم غير موجود في قاعدة البيانات')
         setLoading(false)
         return
       }
 
-      const role = userData.role
-      alert('✅ تم تسجيل الدخول كـ ' + role)
+      alert(`✅ تم تسجيل الدخول كـ ${userData.role}`)
 
-      // ✅ تحويل أكيد بعد نصف ثانية
-      setTimeout(() => {
-        if (role === 'admin') {
-          window.location.replace('/admin')
-        } else if (role === 'client') {
-          window.location.replace('/client')
-        }
-      }, 500)
+      // ✅ استخدم router بدل window.location
+      if (userData.role === 'admin') {
+        router.push('/admin')
+      } else if (userData.role === 'client') {
+        router.push('/client')
+      }
     } catch (err) {
-      alert('حدث خطأ غير متوقع.')
+      alert('حدث خطأ غير متوقع')
       console.error(err)
     }
 
@@ -61,8 +57,6 @@ export default function Login() {
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl font-bold mb-6 text-center">Auto Responder Login</h2>
-
-        {error && <p className="text-red-500 text-center mb-3">{error}</p>}
 
         <input
           type="email"
