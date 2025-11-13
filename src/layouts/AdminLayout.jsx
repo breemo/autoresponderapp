@@ -1,59 +1,45 @@
 import React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../App";
 
 export default function AdminLayout({ children }) {
-  const { setUser } = useAuth();
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
-  const handleLogout = () => {
+  function logout() {
     localStorage.removeItem("user");
     setUser(null);
     navigate("/");
-  };
-
-  const menu = [
-    { name: "الصفحة الرئيسية", path: "/admin" },
-    { name: "العملاء", path: "/admin/clients" },
-    { name: "الرسائل المرسلة", path: "/admin/messages" },
-    { name: "الردود التلقائية", path: "/admin/auto-replies" },
-    { name: "الإعدادات", path: "/admin/settings" },
-  ];
+  }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg p-5 flex flex-col">
-        <h2 className="text-2xl font-bold mb-6 text-blue-600">
-          AutoResponder Admin
-        </h2>
+    <div className="flex">
 
-        <nav className="flex-1 space-y-3">
-          {menu.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `block px-4 py-2 rounded-lg font-medium ${
-                  isActive ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-200"
-                }`
-              }
-            >
-              {item.name}
-            </NavLink>
-          ))}
+      {/* Sidebar */}
+      <aside className="w-64 bg-white shadow h-screen p-6 flex flex-col">
+        <h1 className="text-xl font-bold text-blue-600 mb-6">AutoResponder Admin</h1>
+
+        <nav className="flex flex-col gap-4">
+          <Link to="/admin" className="hover:text-blue-600">الصفحة الرئيسية</Link>
+          <Link to="/admin/campaigns" className="hover:text-blue-600">الحملات</Link>
+          <Link to="/admin/messages" className="hover:text-blue-600">الرسائل المرسلة</Link>
+          <Link to="/admin/auto-replies" className="hover:text-blue-600">الردود التلقائية</Link>
+          <Link to="/admin/settings" className="hover:text-blue-600">الإعدادات</Link>
         </nav>
 
         <button
-          onClick={handleLogout}
-          className="mt-5 w-full py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          onClick={logout}
+          className="mt-auto bg-red-500 text-white py-2 rounded"
         >
           تسجيل الخروج
         </button>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 p-10 overflow-y-auto">{children}</main>
+      {/* Content */}
+      <main className="flex-1 p-10 bg-gray-50 min-h-screen">
+        {children}
+      </main>
+
     </div>
   );
 }
