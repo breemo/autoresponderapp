@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient";
-import AdminLayout from "../layouts/AdminLayout";  // ✅ إضافة اللياوت
+import AdminLayout from "../layouts/AdminLayout";
 
 export default function Settings() {
-
   const [settings, setSettings] = useState({
     smtp_host: "",
     smtp_port: "",
@@ -25,8 +24,7 @@ export default function Settings() {
   }, []);
 
   return (
-    <AdminLayout>   {/* ✅ إضافة التصميم الموحد */}
-
+    <AdminLayout>
       <div className="p-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-6">
           ⚙️ إعدادات النظام
@@ -71,7 +69,6 @@ export default function Settings() {
           </button>
         </div>
       </div>
-
     </AdminLayout>
   );
 }
