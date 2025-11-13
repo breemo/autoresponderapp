@@ -1,10 +1,11 @@
-'use client'
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../App"; // ✅ استدعاء الـ context
 
 export default function Login() {
   const navigate = useNavigate();
+  const { setUser } = useAuth(); // ✅ ربط setUser من الـ Context
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -12,7 +13,6 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // التحقق من بيانات المستخدم من Supabase
     const { data: user, error } = await supabase
       .from("users")
       .select("*")
@@ -25,21 +25,14 @@ export default function Login() {
       return;
     }
 
-    // حفظ المستخدم في localStorage
-
     localStorage.setItem("user", JSON.stringify(user));
-    window.dispatchEvent(new Event("storage"));
+    setUser(user); // ✅ تحديث السياق مباشرة
 
     setMessage(`✅ مرحبًا ${user.role === "admin" ? "بالمدير" : "بالعميل"}!`);
-    
-    // توجيه المستخدم للصفحة المناسبة
+
     setTimeout(() => {
-      if (user.role === "admin") {
-        navigate("/admin");
-      } else if (user.role === "client") {
-        navigate("/client");
-      }
-    }, 800);
+      navigate(user.role === "admin" ? "/admin" : "/client");
+    }, 500);
   };
 
   return (
