@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: './',        // مهم جداً على Vercel
+  base: './', // ← هاي أهم سطر لحل مشكلة Vercel
   build: {
-    outDir: 'dist',  // يتطابق مع إعداد Vercel
+    outDir: 'dist',
   },
 })
