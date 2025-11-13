@@ -86,7 +86,7 @@ export default function App() {
 
           <Route
             path="/admin/auto-replies"
-            element{
+            element={
               user?.role === "admin" ? (
                 <AdminAutoReplies />
               ) : (
