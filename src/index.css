@@ -1,10 +1,7 @@
-/* index.css */
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: #f9fafb;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-button {
-  cursor: pointer;
+body {
+  @apply bg-gray-50 text-gray-900;
 }
