@@ -28,6 +28,9 @@ export default function Login() {
     // حفظ المستخدم في localStorage
     localStorage.setItem("user", JSON.stringify(user));
 
+    localStorage.setItem("user", JSON.stringify(user));
+    window.dispatchEvent(new Event("storage"));
+
     setMessage(`✅ مرحبًا ${user.role === "admin" ? "بالمدير" : "بالعميل"}!`);
     
     // توجيه المستخدم للصفحة المناسبة
