@@ -1,63 +1,59 @@
 import React from "react";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../App";
 
-export default function AdminLayout() {
+export default function AdminLayout({ children }) {
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
-  const logout = () => {
+  const handleLogout = () => {
     localStorage.removeItem("user");
+    setUser(null);
     navigate("/");
   };
 
-  return (
-    <div className="flex min-h-screen bg-gray-100">
+  const menu = [
+    { name: "الصفحة الرئيسية", path: "/admin" },
+    { name: "العملاء", path: "/admin/clients" },
+    { name: "الرسائل المرسلة", path: "/admin/messages" },
+    { name: "الردود التلقائية", path: "/admin/auto-replies" },
+    { name: "الإعدادات", path: "/admin/settings" },
+  ];
 
+  return (
+    <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md p-6">
-        <h2 className="text-xl font-bold text-blue-600 mb-6">
-          📊 AutoResponder Admin
+      <aside className="w-64 bg-white shadow-lg p-5 flex flex-col">
+        <h2 className="text-2xl font-bold mb-6 text-blue-600">
+          AutoResponder Admin
         </h2>
 
-        <ul className="space-y-3 text-gray-700">
-          <li>
-            <Link to="/admin" className="block hover:text-blue-600">
-              🏠 الصفحة الرئيسية
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/users" className="block hover:text-blue-600">
-              👥 إدارة المستخدمين
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/messages" className="block hover:text-blue-600">
-              💬 سجل الرسائل
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/replies" className="block hover:text-blue-600">
-              🤖 الردود التلقائية
-            </Link>
-          </li>
-          <li>
-            <Link to="/admin/settings" className="block hover:text-blue-600">
-              ⚙️ الإعدادات
-            </Link>
-          </li>
-        </ul>
+        <nav className="flex-1 space-y-3">
+          {menu.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `block px-4 py-2 rounded-lg font-medium ${
+                  isActive ? "bg-blue-600 text-white" : "text-gray-700 hover:bg-gray-200"
+                }`
+              }
+            >
+              {item.name}
+            </NavLink>
+          ))}
+        </nav>
 
         <button
-          onClick={logout}
-          className="mt-10 w-full bg-red-500 text-white py-2 rounded hover:bg-red-600"
+          onClick={handleLogout}
+          className="mt-5 w-full py-2 bg-red-500 text-white rounded hover:bg-red-600"
         >
           تسجيل الخروج
         </button>
-      </div>
+      </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 p-8">
-        <Outlet />
-      </div>
+      {/* Main content */}
+      <main className="flex-1 p-10 overflow-y-auto">{children}</main>
     </div>
   );
 }
