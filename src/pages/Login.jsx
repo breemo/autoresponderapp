@@ -1,94 +1,86 @@
+'use client'
 import React, { useState } from "react";
-import { supabase } from "../lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
-import Loader from "../components/Loader";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
 
-    try {
-      const { data: user, error: queryError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("email", email)
-        .eq("password", password)
-        .single();
+    // التحقق من بيانات المستخدم من Supabase
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .eq("password", password)
+      .single();
 
-      if (queryError || !user) {
-        setError("❌ بيانات الدخول غير صحيحة");
-        setLoading(false);
-        return;
-      }
-
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // تأخير بسيط لتظهر شاشة التحميل
-      setTimeout(() => {
-        if (user.role === "admin") {
-          navigate("/admin");
-        } else {
-          navigate("/client");
-        }
-      }, 1200);
-    } catch (err) {
-      console.error(err);
-      setError("حدث خطأ أثناء تسجيل الدخول، حاول لاحقًا.");
-      setLoading(false);
+    if (error || !user) {
+      setMessage("❌ البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      return;
     }
+
+    // حفظ المستخدم في localStorage
+    localStorage.setItem("user", JSON.stringify(user));
+
+    setMessage(`✅ مرحبًا ${user.role === "admin" ? "بالمدير" : "بالعميل"}!`);
+    
+    // توجيه المستخدم للصفحة المناسبة
+    setTimeout(() => {
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else if (user.role === "client") {
+        navigate("/client");
+      }
+    }, 800);
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-50 flex flex-col justify-center items-center">
-      {loading && <Loader text="جاري تسجيل الدخول..." />}
-
-      <div className="bg-white shadow-md rounded-2xl w-full max-w-md p-8 border border-gray-200">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <form
+        onSubmit={handleLogin}
+        className="bg-white shadow-md rounded-lg px-8 py-6 w-96 border border-gray-100"
+      >
+        <h2 className="text-2xl font-bold mb-4 text-center text-blue-600">
           Auto Responder Login
-        </h1>
+        </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+        {message && (
+          <p className="text-center mb-3 text-green-600 font-medium">
+            {message}
+          </p>
+        )}
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
+        <input
+          type="email"
+          placeholder="البريد الإلكتروني"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
+        />
 
-          {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+        <input
+          type="password"
+          placeholder="كلمة المرور"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full mb-4 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          required
+        />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`w-full py-2 rounded-lg font-semibold text-white transition duration-200 ${
-              loading
-                ? "bg-blue-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
-          >
-            {loading ? "جاري الدخول..." : "تسجيل الدخول"}
-          </button>
-        </form>
-      </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-all"
+        >
+          تسجيل الدخول
+        </button>
+      </form>
     </div>
   );
 }
