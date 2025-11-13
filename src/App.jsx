@@ -10,114 +10,72 @@ import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 
-// صفحات الأدمن الجديدة
 import AdminClients from "./pages/AdminClients";
-import AdminMessages from "./pages/AdminMessages";
-import AdminAutoReplies from "./pages/AdminAutoReplies";
-import AdminSettings from "./pages/AdminSettings";
+import AdminPlans from "./pages/AdminPlans";
+import AdminClientSettings from "./pages/AdminClientSettings";
+import Settings from "./pages/Settings";
 
-// ------------------------------------------------------
-// 🔵 AUTH CONTEXT
-// ------------------------------------------------------
-
+// ✅ Auth Context
 const AuthContext = createContext(null);
 
 export function useAuth() {
   return useContext(AuthContext);
 }
 
-// ------------------------------------------------------
-// 🔵 APP COMPONENT
-// ------------------------------------------------------
-
 export default function App() {
   const [user, setUser] = useState(null);
 
-  // تحميل المستخدم من localStorage عند بدء التشغيل
+  // تحميل المستخدم من localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
-      setUser(JSON.parse(stored));
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        console.error("Invalid user JSON");
+      }
     }
   }, []);
+
+  const requireAdmin = (element) =>
+    user?.role === "admin" ? element : <Navigate to="/" replace />;
+
+  const requireClient = (element) =>
+    user?.role === "client" ? element : <Navigate to="/" replace />;
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* صفحة تسجيل الدخول */}
+          {/* Login */}
           <Route path="/" element={<Login />} />
 
-          {/* -------------------------
-              🔵 ADMIN ROUTES
-          -------------------------- */}
+          {/* Admin area */}
           <Route
             path="/admin"
-            element={
-              user?.role === "admin" ? (
-                <AdminDashboard />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
+            element={requireAdmin(<AdminDashboard />)}
           />
-
           <Route
             path="/admin/clients"
-            element={
-              user?.role === "admin" ? (
-                <AdminClients />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
+            element={requireAdmin(<AdminClients />)}
           />
-
           <Route
-            path="/admin/messages"
-            element={
-              user?.role === "admin" ? (
-                <AdminMessages />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
+            path="/admin/plans"
+            element={requireAdmin(<AdminPlans />)}
           />
-
           <Route
-            path="/admin/auto-replies"
-            element={
-              user?.role === "admin" ? (
-                <AdminAutoReplies />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
+            path="/admin/client/:id"
+            element={requireAdmin(<AdminClientSettings />)}
           />
-
           <Route
             path="/admin/settings"
-            element={
-              user?.role === "admin" ? (
-                <AdminSettings />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
+            element={requireAdmin(<Settings />)}
           />
 
-          {/* -------------------------
-              🟢 CLIENT ROUTE
-          -------------------------- */}
+          {/* Client dashboard */}
           <Route
             path="/client"
-            element={
-              user?.role === "client" ? (
-                <ClientDashboard />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
+            element={requireClient(<ClientDashboard />)}
           />
         </Routes>
       </Router>
