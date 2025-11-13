@@ -1,24 +1,43 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 
-// ✅ أنشأنا الـ Context
+// صفحات الأدمن الجديدة
+import AdminClients from "./pages/AdminClients";
+import AdminMessages from "./pages/AdminMessages";
+import AdminAutoReplies from "./pages/AdminAutoReplies";
+import AdminSettings from "./pages/AdminSettings";
+
+// ------------------------------------------------------
+// 🔵 AUTH CONTEXT
+// ------------------------------------------------------
+
 const AuthContext = createContext(null);
 
-// ✅ أضف هذا السطر لتصدير الـ hook
 export function useAuth() {
   return useContext(AuthContext);
 }
 
+// ------------------------------------------------------
+// 🔵 APP COMPONENT
+// ------------------------------------------------------
+
 export default function App() {
   const [user, setUser] = useState(null);
 
+  // تحميل المستخدم من localStorage عند بدء التشغيل
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      setUser(JSON.parse(stored));
     }
   }, []);
 
@@ -26,7 +45,12 @@ export default function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
+          {/* صفحة تسجيل الدخول */}
           <Route path="/" element={<Login />} />
+
+          {/* -------------------------
+              🔵 ADMIN ROUTES
+          -------------------------- */}
           <Route
             path="/admin"
             element={
@@ -37,6 +61,54 @@ export default function App() {
               )
             }
           />
+
+          <Route
+            path="/admin/clients"
+            element={
+              user?.role === "admin" ? (
+                <AdminClients />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+
+          <Route
+            path="/admin/messages"
+            element={
+              user?.role === "admin" ? (
+                <AdminMessages />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+
+          <Route
+            path="/admin/auto-replies"
+            element{
+              user?.role === "admin" ? (
+                <AdminAutoReplies />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+
+          <Route
+            path="/admin/settings"
+            element={
+              user?.role === "admin" ? (
+                <AdminSettings />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+
+          {/* -------------------------
+              🟢 CLIENT ROUTE
+          -------------------------- */}
           <Route
             path="/client"
             element={
