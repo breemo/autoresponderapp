@@ -42,33 +42,34 @@ export default function Clients() {
   }
 
   async function addClient() {
-    if (!form.business_name || !form.email) {
-      setError("الاسم التجاري والإيميل مطلوبان");
-      return;
-    }
-
-    try:
-      setSaving(true);
-      setError("");
-
-      const { error: insertError } = await supabase.from("clients").insert({
-        business_name: form.business_name,
-        email: form.email,
-        plan_id: form.plan_id || null,
-        is_active: true,
-      });
-
-      if (insertError) throw insertError;
-
-      setForm({ business_name: "", email: "", plan_id: "" });
-      await fetchInitial();
-    } catch (err) {
-      console.error(err);
-      setError("فشل في إضافة العميل");
-    } finally {
-      setSaving(false);
-    }
+  if (!form.business_name || !form.email) {
+    setError("الاسم التجاري والإيميل مطلوبان");
+    return;
   }
+
+  try {
+    setSaving(true);
+    setError("");
+
+    const { error: insertError } = await supabase.from("clients").insert({
+      business_name: form.business_name,
+      email: form.email,
+      plan_id: form.plan_id || null,
+      is_active: true,
+    });
+
+    if (insertError) throw insertError;
+
+    setForm({ business_name: "", email: "", plan_id: "" });
+    await fetchInitial();
+  } catch (err) {
+    console.error(err);
+    setError("فشل في إضافة العميل");
+  } finally {
+    setSaving(false);
+  }
+}
+
 
   async function toggleActive(client) {
     try {
