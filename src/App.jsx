@@ -11,6 +11,7 @@ import {
   Navigate,
 } from "react-router-dom";
 
+// الصفحات
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import Clients from "./pages/Clients";
@@ -18,6 +19,8 @@ import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientDashboard";
+
+// الـ Layout
 import AdminLayout from "./layouts/AdminLayout";
 
 // ---------- Auth Context ----------
@@ -27,7 +30,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// route خاصة بالأدمن، بتحط الـ layout مرّة واحدة
+// ---------- حماية صفحات الأدمن + وضع الـ Layout ----------
 function AdminRoute({ children }) {
   const { user } = useAuth();
 
@@ -41,12 +44,12 @@ function AdminRoute({ children }) {
 export default function App() {
   const [user, setUser] = useState(null);
 
-  // تحميل المستخدم من localStorage عند أول تحميل
+  // تحميل المستخدم عند أول تشغيل
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
       try {
-        setUser(JSON.parse(stored));
+        setUser(JSON.parse(storedUser));
       } catch {
         localStorage.removeItem("user");
       }
@@ -57,10 +60,10 @@ export default function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* Login */}
+          {/* صفحة تسجيل الدخول */}
           <Route path="/" element={<Login />} />
 
-          {/* صفحات الأدمن – كلها تحت AdminRoute */}
+          {/* صفحات الأدمن */}
           <Route
             path="/admin"
             element={
@@ -69,6 +72,7 @@ export default function App() {
               </AdminRoute>
             }
           />
+
           <Route
             path="/admin/clients"
             element={
@@ -77,6 +81,7 @@ export default function App() {
               </AdminRoute>
             }
           />
+
           <Route
             path="/admin/messages"
             element={
@@ -85,6 +90,7 @@ export default function App() {
               </AdminRoute>
             }
           />
+
           <Route
             path="/admin/auto-replies"
             element={
@@ -93,6 +99,7 @@ export default function App() {
               </AdminRoute>
             }
           />
+
           <Route
             path="/admin/settings"
             element={
@@ -102,7 +109,7 @@ export default function App() {
             }
           />
 
-          {/* صفحة العميل (لو حابب تستعملها لاحقاً) */}
+          {/* صفحة العميل */}
           <Route
             path="/client"
             element={
@@ -113,6 +120,9 @@ export default function App() {
               )
             }
           />
+
+          {/* أي رابط غلط */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
