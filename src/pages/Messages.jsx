@@ -1,87 +1,128 @@
 import React, { useEffect, useState } from "react";
+import AdminLayout from "../layouts/AdminLayout";
 import { supabase } from "../lib/supabaseClient";
-import Loader from "../components/Loader";
 
 export default function Messages() {
   const [messages, setMessages] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [filters, setFilters] = useState({
+    client_id: "",
+    direction: "",
+  });
+
+  // تحميل البيانات
+  const fetchData = async () => {
+    setLoading(true);
+
+    // جلب العملاء
+    const { data: clientsData } = await supabase
+      .from("clients")
+      .select("id, business_name");
+
+    setClients(clientsData || []);
+
+    // جلب الرسائل
+    let query = supabase
+      .from("messages")
+      .select("*, clients(business_name)")
+      .order("created_at", { ascending: false });
+
+    if (filters.client_id) query.eq("client_id", filters.client_id);
+    if (filters.direction) query.eq("direction", filters.direction);
+
+    const { data: msgData } = await query;
+    setMessages(msgData || []);
+
+    setLoading(false);
+  };
+
   useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from("messages")
-          .select(
-            "id, text, direction, status, created_at, clients ( business_name )"
-          )
-          .order("created_at", { ascending: false })
-          .limit(100);
-
-        if (error) throw error;
-        setMessages(data || []);
-      } catch (err) {
-        console.error("Error loading messages", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  if (loading) return <Loader />;
+    fetchData();
+  }, [filters]);
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-        الرسائل المرسلة
-      </h2>
-      <p className="text-sm text-gray-500 mb-6">
-        آخر 100 رسالة تم تسجيلها في النظام.
-      </p>
+    <AdminLayout>
+      <h1 className="text-2xl font-bold mb-6">📩 الرسائل المرسلة</h1>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
-            <tr>
-              <th className="px-4 py-3 text-right">العميل</th>
-              <th className="px-4 py-3 text-right">النص</th>
-              <th className="px-4 py-3 text-right">الاتجاه</th>
-              <th className="px-4 py-3 text-right">الحالة</th>
-              <th className="px-4 py-3 text-right">التاريخ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {messages.length === 0 && (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-6 text-center text-gray-400 text-sm"
-                >
-                  لا توجد رسائل بعد.
-                </td>
-              </tr>
-            )}
-            {messages.map((m) => (
-              <tr key={m.id} className="border-t border-gray-100">
-                <td className="px-4 py-3">{m.clients?.business_name || "-"}</td>
-                <td className="px-4 py-3 max-w-xs truncate" title={m.text}>
-                  {m.text}
-                </td>
-                <td className="px-4 py-3">
-                  {m.direction === "out" ? "صادرة" : "واردة"}
-                </td>
-                <td className="px-4 py-3">{m.status || "-"}</td>
-                <td className="px-4 py-3">
-                  {m.created_at
-                    ? new Date(m.created_at).toLocaleString("ar-EG")
-                    : "-"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* الفلاتر */}
+      <div className="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap gap-4">
+        <select
+          className="border p-2 rounded"
+          value={filters.client_id}
+          onChange={(e) =>
+            setFilters({ ...filters, client_id: e.target.value })
+          }
+        >
+          <option value="">كل العملاء</option>
+          {clients.map((c) => (
+            <option value={c.id} key={c.id}>
+              {c.business_name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="border p-2 rounded"
+          value={filters.direction}
+          onChange={(e) =>
+            setFilters({ ...filters, direction: e.target.value })
+          }
+        >
+          <option value="">كل الأنواع</option>
+          <option value="incoming">📥 واردة</option>
+          <option value="outgoing">📤 صادرة</option>
+        </select>
       </div>
-    </div>
+
+      {/* جدول الرسائل */}
+      <div className="bg-white p-6 rounded-xl shadow">
+        {loading ? (
+          <p>جارِ التحميل...</p>
+        ) : messages.length === 0 ? (
+          <p className="text-gray-400">لا يوجد رسائل.</p>
+        ) : (
+          <table className="w-full text-right">
+            <thead>
+              <tr className="border-b text-gray-600">
+                <th className="py-2">العميل</th>
+                <th className="py-2">النص</th>
+                <th className="py-2">الاتجاه</th>
+                <th className="py-2">الحالة</th>
+                <th className="py-2">التاريخ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {messages.map((m) => (
+                <tr key={m.id} className="border-b text-sm">
+                  <td className="py-2">
+                    {m.clients?.business_name || "-"}
+                  </td>
+
+                  <td className="py-2">{m.text}</td>
+
+                  <td className="py-2">
+                    {m.direction === "incoming" ? (
+                      <span className="text-blue-600">📥 واردة</span>
+                    ) : (
+                      <span className="text-green-600">📤 صادرة</span>
+                    )}
+                  </td>
+
+                  <td className="py-2">{m.status || "-"}</td>
+
+                  <td className="py-2 text-gray-500">
+                    {m.created_at
+                      ? new Date(m.created_at).toLocaleString("ar-EG")
+                      : "-"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </AdminLayout>
   );
 }
