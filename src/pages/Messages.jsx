@@ -1,39 +1,87 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import AdminLayout from "../layouts/AdminLayout";
+import Loader from "../components/Loader";
 
 export default function Messages() {
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchMessages();
+    async function load() {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("messages")
+          .select(
+            "id, text, direction, status, created_at, clients ( business_name )"
+          )
+          .order("created_at", { ascending: false })
+          .limit(100);
+
+        if (error) throw error;
+        setMessages(data || []);
+      } catch (err) {
+        console.error("Error loading messages", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
   }, []);
 
-  async function fetchMessages() {
-    let { data } = await supabase.from("messages").select("*");
-    setMessages(data || []);
-  }
+  if (loading) return <Loader />;
 
   return (
-    <AdminLayout>
-      <h1 className="text-2xl font-bold mb-4">الرسائل المرسلة</h1>
+    <div>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+        الرسائل المرسلة
+      </h2>
+      <p className="text-sm text-gray-500 mb-6">
+        آخر 100 رسالة تم تسجيلها في النظام.
+      </p>
 
-      <table className="w-full bg-white shadow rounded">
-        <thead>
-          <tr className="border-b">
-            <th className="p-3">العميل</th>
-            <th className="p-3">الرسالة</th>
-          </tr>
-        </thead>
-        <tbody>
-          {messages.map((m) => (
-            <tr key={m.id} className="border-b">
-              <td className="p-3">{m.client_name}</td>
-              <td className="p-3">{m.body}</td>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="px-4 py-3 text-right">العميل</th>
+              <th className="px-4 py-3 text-right">النص</th>
+              <th className="px-4 py-3 text-right">الاتجاه</th>
+              <th className="px-4 py-3 text-right">الحالة</th>
+              <th className="px-4 py-3 text-right">التاريخ</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </AdminLayout>
+          </thead>
+          <tbody>
+            {messages.length === 0 && (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-4 py-6 text-center text-gray-400 text-sm"
+                >
+                  لا توجد رسائل بعد.
+                </td>
+              </tr>
+            )}
+            {messages.map((m) => (
+              <tr key={m.id} className="border-t border-gray-100">
+                <td className="px-4 py-3">{m.clients?.business_name || "-"}</td>
+                <td className="px-4 py-3 max-w-xs truncate" title={m.text}>
+                  {m.text}
+                </td>
+                <td className="px-4 py-3">
+                  {m.direction === "out" ? "صادرة" : "واردة"}
+                </td>
+                <td className="px-4 py-3">{m.status || "-"}</td>
+                <td className="px-4 py-3">
+                  {m.created_at
+                    ? new Date(m.created_at).toLocaleString("ar-EG")
+                    : "-"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
