@@ -1,131 +1,138 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
-import Loader from "../components/Loader";
 
 export default function AutoReplies() {
-  const [replies, setReplies] = useState([]);
   const [clients, setClients] = useState([]);
+  const [replies, setReplies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
   const [form, setForm] = useState({
     client_id: "",
     trigger_text: "",
     reply_text: "",
   });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-
-        const [{ data: repliesData }, { data: clientsData }] = await Promise.all(
-          [
-            supabase
-              .from("auto_replies")
-              .select(
-                "id, client_id, trigger_text, reply_text, is_active, created_at, clients ( business_name )"
-              )
-              .order("created_at", { ascending: false }),
-            supabase
-              .from("clients")
-              .select("id, business_name")
-              .order("business_name"),
-          ]
-        );
-
-        setReplies(repliesData || []);
-        setClients(clientsData || []);
-      } catch (err) {
-        console.error("Error loading auto replies", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
+    fetchData();
   }, []);
 
-  async function handleAdd(e) {
-    e.preventDefault();
-    if (!form.client_id || !form.trigger_text || !form.reply_text) return;
+  async function fetchData() {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [{ data: clientsData }, { data: repliesData }] = await Promise.all(
+        [
+          supabase.from("clients").select("id, business_name"),
+          supabase
+            .from("auto_replies")
+            .select("id, client_id, trigger_text, reply_text, is_active, created_at")
+            .order("created_at", { ascending: false }),
+        ]
+      );
+
+      setClients(clientsData || []);
+      setReplies(repliesData || []);
+    } catch (err) {
+      console.error(err);
+      setError("فشل في تحميل البيانات");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function getClientName(id) {
+    return clients.find((c) => c.id === id)?.business_name || "غير معروف";
+  }
+
+  async function addRule() {
+    if (!form.client_id || !form.trigger_text || !form.reply_text) {
+      setError("كل الحقول مطلوبة");
+      return;
+    }
 
     try {
       setSaving(true);
-      const { data, error } = await supabase
-        .from("auto_replies")
-        .insert({
-          client_id: form.client_id,
-          trigger_text: form.trigger_text,
-          reply_text: form.reply_text,
-          is_active: true,
-        })
-        .select("id, client_id, trigger_text, reply_text, is_active, created_at")
-        .single();
+      setError("");
+
+      const { error } = await supabase.from("auto_replies").insert({
+        client_id: form.client_id,
+        trigger_text: form.trigger_text,
+        reply_text: form.reply_text,
+        is_active: true,
+      });
 
       if (error) throw error;
 
-      const client = clients.find((c) => c.id === data.client_id);
-      setReplies((prev) => [
-        {
-          ...data,
-          clients: client ? { business_name: client.business_name } : null,
-        },
-        ...prev,
-      ]);
       setForm({ client_id: "", trigger_text: "", reply_text: "" });
+      await fetchData();
     } catch (err) {
-      console.error("Error adding auto reply", err);
-      alert("فشل في إضافة الرد التلقائي");
+      console.error(err);
+      setError("فشل في إضافة الرد التلقائي");
     } finally {
       setSaving(false);
     }
   }
 
-  async function toggleActive(id, current) {
+  async function toggleActive(rule) {
     try {
       const { error } = await supabase
         .from("auto_replies")
-        .update({ is_active: !current })
-        .eq("id", id);
+        .update({ is_active: !rule.is_active })
+        .eq("id", rule.id);
 
       if (error) throw error;
-
-      setReplies((prev) =>
-        prev.map((r) => (r.id === id ? { ...r, is_active: !current } : r))
-      );
+      await fetchData();
     } catch (err) {
-      console.error("Error toggling auto reply", err);
-      alert("فشل في التعديل");
+      console.error(err);
+      setError("فشل في تحديث حالة الرد");
     }
   }
 
-  if (loading) return <Loader />;
+  async function deleteRule(id) {
+    if (!window.confirm("هل أنت متأكد من حذف هذا الرد التلقائي؟")) return;
+
+    try {
+      const { error } = await supabase
+        .from("auto_replies")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      await fetchData();
+    } catch (err) {
+      console.error(err);
+      setError("فشل في حذف الرد التلقائي");
+    }
+  }
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-        الردود التلقائية
-      </h2>
-      <p className="text-sm text-gray-500 mb-6">
-        إدارة القواعد التي يقوم النظام بالرد من خلالها تلقائياً.
+      <h2 className="text-2xl font-bold mb-2">الردود التلقائية</h2>
+      <p className="text-gray-500 mb-6">
+        إعداد وتعديل الردود التلقائية حسب الكلمات المفتاحية لكل عميل.
       </p>
 
-      {/* نموذج إضافة رد تلقائي */}
-      <form
-        onSubmit={handleAdd}
-        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-8 flex flex-col gap-3"
-      >
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="w-full md:w-64">
-            <label className="block text-xs text-gray-500 mb-1">العميل</label>
+      {error && (
+        <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-2 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* إضافة رد تلقائي */}
+      <div className="bg-white rounded-xl shadow mb-8 p-6 space-y-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block mb-1">العميل</label>
             <select
-              className="w-full border rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/60"
               value={form.client_id}
               onChange={(e) =>
-                setForm((f) => ({ ...f, client_id: e.target.value }))
+                setForm({ ...form, client_id: e.target.value })
               }
+              className="border rounded w-full px-3 py-2"
             >
-              <option value="">اختر العميل</option>
+              <option value="">اختر عميل...</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.business_name}
@@ -134,91 +141,99 @@ export default function AutoReplies() {
             </select>
           </div>
 
-          <div className="flex-1">
-            <label className="block text-xs text-gray-500 mb-1">
-              النص المُحفِّز
-            </label>
+          <div>
+            <label className="block mb-1">الكلمة/العبارة المحفِّزة</label>
             <input
               type="text"
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/60"
               value={form.trigger_text}
               onChange={(e) =>
-                setForm((f) => ({ ...f, trigger_text: e.target.value }))
+                setForm({ ...form, trigger_text: e.target.value })
               }
+              className="border rounded w-full px-3 py-2"
             />
           </div>
 
-          <div className="flex-1">
-            <label className="block text-xs text-gray-500 mb-1">نص الرد</label>
+          <div>
+            <label className="block mb-1">نص الرد التلقائي</label>
             <input
               type="text"
-              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/60"
               value={form.reply_text}
               onChange={(e) =>
-                setForm((f) => ({ ...f, reply_text: e.target.value }))
+                setForm({ ...form, reply_text: e.target.value })
               }
+              className="border rounded w-full px-3 py-2"
             />
           </div>
         </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md min-w-[140px]"
-          >
-            {saving ? "جاري الحفظ..." : "إضافة رد تلقائي"}
-          </button>
-        </div>
-      </form>
+        <button
+          onClick={addRule}
+          disabled={saving}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-60"
+        >
+          {saving ? "جارِ الحفظ..." : "إضافة رد تلقائي"}
+        </button>
+      </div>
 
       {/* جدول الردود */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
-            <tr>
-              <th className="px-4 py-3 text-right">العميل</th>
-              <th className="px-4 py-3 text-right">النص المُحفِّز</th>
-              <th className="px-4 py-3 text-right">نص الرد</th>
-              <th className="px-4 py-3 text-right">الحالة</th>
-              <th className="px-4 py-3 text-center">إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {replies.length === 0 && (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-6 text-center text-gray-400 text-sm"
-                >
-                  لا توجد ردود تلقائية بعد.
-                </td>
-              </tr>
-            )}
-            {replies.map((r) => (
-              <tr key={r.id} className="border-t border-gray-100">
-                <td className="px-4 py-3">{r.clients?.business_name || "-"}</td>
-                <td className="px-4 py-3">{r.trigger_text}</td>
-                <td className="px-4 py-3">{r.reply_text}</td>
-                <td className="px-4 py-3">
-                  {r.is_active ? (
-                    <span className="text-green-600">مفعل</span>
-                  ) : (
-                    <span className="text-gray-400">موقوف</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    onClick={() => toggleActive(r.id, r.is_active)}
-                    className="text-xs text-blue-600 hover:text-blue-800"
-                  >
-                    تبديل الحالة
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="bg-white rounded-xl shadow p-6">
+        {loading ? (
+          <div className="text-gray-500 text-sm">جارِ تحميل الردود...</div>
+        ) : replies.length === 0 ? (
+          <div className="text-gray-400 text-sm">
+            لا يوجد ردود تلقائية حالياً.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr className="text-left text-gray-600">
+                  <th className="py-2 px-2">العميل</th>
+                  <th className="py-2 px-2">المحفّز</th>
+                  <th className="py-2 px-2">الرد</th>
+                  <th className="py-2 px-2">الحالة</th>
+                  <th className="py-2 px-2">تاريخ الإنشاء</th>
+                  <th className="py-2 px-2 text-center">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {replies.map((r) => (
+                  <tr key={r.id} className="border-b">
+                    <td className="py-2 px-2">{getClientName(r.client_id)}</td>
+                    <td className="py-2 px-2">{r.trigger_text}</td>
+                    <td className="py-2 px-2">{r.reply_text}</td>
+                    <td className="py-2 px-2">
+                      {r.is_active === false ? (
+                        <span className="text-red-500">معطّل</span>
+                      ) : (
+                        <span className="text-green-600">مفعّل</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-2 text-gray-500">
+                      {r.created_at
+                        ? new Date(r.created_at).toLocaleString("ar-EG")
+                        : "-"}
+                    </td>
+                    <td className="py-2 px-2 text-center space-x-2 space-x-reverse">
+                      <button
+                        onClick={() => toggleActive(r)}
+                        className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded mr-1"
+                      >
+                        {r.is_active === false ? "تفعيل" : "تعطيل"}
+                      </button>
+                      <button
+                        onClick={() => deleteRule(r.id)}
+                        className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded"
+                      >
+                        حذف
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
