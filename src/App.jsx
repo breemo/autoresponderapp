@@ -1,4 +1,9 @@
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,48 +13,96 @@ import {
 
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
-import ClientDashboard from "./pages/ClientDashboard";
-import AdminLayout from "./layouts/AdminLayout";
 import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
+import ClientDashboard from "./pages/ClientDashboard";
+import AdminLayout from "./layouts/AdminLayout";
 
-// Context للمستخدم الحالي
+// ---------- Auth Context ----------
 const AuthContext = createContext(null);
 
 export function useAuth() {
   return useContext(AuthContext);
 }
 
+// route خاصة بالأدمن، بتحط الـ layout مرّة واحدة
+function AdminRoute({ children }) {
+  const { user } = useAuth();
+
+  if (!user || user.role !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  return <AdminLayout>{children}</AdminLayout>;
+}
+
 export default function App() {
   const [user, setUser] = useState(null);
-  const [bootstrapping, setBootstrapping] = useState(true);
 
-  // نقرأ المستخدم من localStorage عند أول تحميل
+  // تحميل المستخدم من localStorage عند أول تحميل
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored) {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      try {
         setUser(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem("user");
       }
-    } catch (err) {
-      console.error("Error reading user from localStorage", err);
-    } finally {
-      setBootstrapping(false);
     }
   }, []);
-
-  if (bootstrapping) return null; // ممكن تحط Splash لو حاب
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* صفحة الدخول */}
+          {/* Login */}
           <Route path="/" element={<Login />} />
 
-          {/* Dashboard للعميل العادي */}
+          {/* صفحات الأدمن – كلها تحت AdminRoute */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/clients"
+            element={
+              <AdminRoute>
+                <Clients />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/messages"
+            element={
+              <AdminRoute>
+                <Messages />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/auto-replies"
+            element={
+              <AdminRoute>
+                <AutoReplies />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/settings"
+            element={
+              <AdminRoute>
+                <Settings />
+              </AdminRoute>
+            }
+          />
+
+          {/* صفحة العميل (لو حابب تستعملها لاحقاً) */}
           <Route
             path="/client"
             element={
@@ -60,27 +113,6 @@ export default function App() {
               )
             }
           />
-
-          {/* منطقة الأدمن مع Layout و Nested Routes */}
-          <Route
-            path="/admin/*"
-            element={
-              user?.role === "admin" ? (
-                <AdminLayout />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="clients" element={<Clients />} />
-            <Route path="messages" element={<Messages />} />
-            <Route path="auto-replies" element={<AutoReplies />} />
-            <Route path="settings" element={<Settings />} />
-          </Route>
-
-          {/* أي مسار غريب -> Login */}
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
