@@ -1,128 +1,145 @@
 import React, { useEffect, useState } from "react";
-import AdminLayout from "../layouts/AdminLayout";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Messages() {
-  const [messages, setMessages] = useState([]);
   const [clients, setClients] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [filters, setFilters] = useState({
-    client_id: "",
-    direction: "",
-  });
-
-  // تحميل البيانات
-  const fetchData = async () => {
-    setLoading(true);
-
-    // جلب العملاء
-    const { data: clientsData } = await supabase
-      .from("clients")
-      .select("id, business_name");
-
-    setClients(clientsData || []);
-
-    // جلب الرسائل
-    let query = supabase
-      .from("messages")
-      .select("*, clients(business_name)")
-      .order("created_at", { ascending: false });
-
-    if (filters.client_id) query.eq("client_id", filters.client_id);
-    if (filters.direction) query.eq("direction", filters.direction);
-
-    const { data: msgData } = await query;
-    setMessages(msgData || []);
-
-    setLoading(false);
-  };
+  const [clientFilter, setClientFilter] = useState("");
+  const [directionFilter, setDirectionFilter] = useState("");
 
   useEffect(() => {
     fetchData();
-  }, [filters]);
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [messages, clientFilter, directionFilter]);
+
+  async function fetchData() {
+    try {
+      setLoading(true);
+
+      const [{ data: clientsData }, { data: messagesData }] = await Promise.all(
+        [
+          supabase.from("clients").select("id, business_name"),
+          supabase
+            .from("messages")
+            .select("id, client_id, text, direction, status, created_at")
+            .order("created_at", { ascending: false }),
+        ]
+      );
+
+      setClients(clientsData || []);
+      setMessages(messagesData || []);
+    } catch (err) {
+      console.error("خطأ في جلب الرسائل:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function applyFilters() {
+    let data = [...messages];
+
+    if (clientFilter) {
+      data = data.filter((m) => m.client_id === clientFilter);
+    }
+
+    if (directionFilter) {
+      data = data.filter((m) => m.direction === directionFilter);
+    }
+
+    setFiltered(data);
+  }
+
+  function getClientName(id) {
+    return clients.find((c) => c.id === id)?.business_name || "غير معروف";
+  }
 
   return (
-    <AdminLayout>
-      <h1 className="text-2xl font-bold mb-6">📩 الرسائل المرسلة</h1>
+    <div>
+      <h2 className="text-2xl font-bold mb-2">الرسائل المرسلة / المستلمة</h2>
+      <p className="text-gray-500 mb-6">
+        عرض ومتابعة الرسائل الخاصة بالعملاء مع إمكانية الفلترة حسب العميل
+        والاتجاه.
+      </p>
 
-      {/* الفلاتر */}
-      <div className="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap gap-4">
-        <select
-          className="border p-2 rounded"
-          value={filters.client_id}
-          onChange={(e) =>
-            setFilters({ ...filters, client_id: e.target.value })
-          }
-        >
-          <option value="">كل العملاء</option>
-          {clients.map((c) => (
-            <option value={c.id} key={c.id}>
-              {c.business_name}
-            </option>
-          ))}
-        </select>
+      {/* فلاتر */}
+      <div className="bg-white rounded-xl shadow p-4 mb-6 flex flex-wrap gap-4 text-sm">
+        <div>
+          <label className="block mb-1">العميل</label>
+          <select
+            value={clientFilter}
+            onChange={(e) => setClientFilter(e.target.value)}
+            className="border rounded px-3 py-2"
+          >
+            <option value="">كل العملاء</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.business_name}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <select
-          className="border p-2 rounded"
-          value={filters.direction}
-          onChange={(e) =>
-            setFilters({ ...filters, direction: e.target.value })
-          }
-        >
-          <option value="">كل الأنواع</option>
-          <option value="incoming">📥 واردة</option>
-          <option value="outgoing">📤 صادرة</option>
-        </select>
+        <div>
+          <label className="block mb-1">الاتجاه</label>
+          <select
+            value={directionFilter}
+            onChange={(e) => setDirectionFilter(e.target.value)}
+            className="border rounded px-3 py-2"
+          >
+            <option value="">الكل</option>
+            <option value="in">واردة</option>
+            <option value="out">صادرة</option>
+          </select>
+        </div>
       </div>
 
       {/* جدول الرسائل */}
-      <div className="bg-white p-6 rounded-xl shadow">
+      <div className="bg-white rounded-xl shadow p-6">
         {loading ? (
-          <p>جارِ التحميل...</p>
-        ) : messages.length === 0 ? (
-          <p className="text-gray-400">لا يوجد رسائل.</p>
+          <div className="text-gray-500 text-sm">جارِ تحميل الرسائل...</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-gray-400 text-sm">
+            لا توجد رسائل مطابقة للفلتر.
+          </div>
         ) : (
-          <table className="w-full text-right">
-            <thead>
-              <tr className="border-b text-gray-600">
-                <th className="py-2">العميل</th>
-                <th className="py-2">النص</th>
-                <th className="py-2">الاتجاه</th>
-                <th className="py-2">الحالة</th>
-                <th className="py-2">التاريخ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {messages.map((m) => (
-                <tr key={m.id} className="border-b text-sm">
-                  <td className="py-2">
-                    {m.clients?.business_name || "-"}
-                  </td>
-
-                  <td className="py-2">{m.text}</td>
-
-                  <td className="py-2">
-                    {m.direction === "incoming" ? (
-                      <span className="text-blue-600">📥 واردة</span>
-                    ) : (
-                      <span className="text-green-600">📤 صادرة</span>
-                    )}
-                  </td>
-
-                  <td className="py-2">{m.status || "-"}</td>
-
-                  <td className="py-2 text-gray-500">
-                    {m.created_at
-                      ? new Date(m.created_at).toLocaleString("ar-EG")
-                      : "-"}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr className="text-left text-gray-600">
+                  <th className="py-2 px-2">العميل</th>
+                  <th className="py-2 px-2">النص</th>
+                  <th className="py-2 px-2">الاتجاه</th>
+                  <th className="py-2 px-2">الحالة</th>
+                  <th className="py-2 px-2">التاريخ</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((m) => (
+                  <tr key={m.id} className="border-b">
+                    <td className="py-2 px-2">{getClientName(m.client_id)}</td>
+                    <td className="py-2 px-2 max-w-xs truncate">{m.text}</td>
+                    <td className="py-2 px-2">
+                      {m.direction === "out" ? "صادرة" : "واردة"}
+                    </td>
+                    <td className="py-2 px-2">{m.status || "-"}</td>
+                    <td className="py-2 px-2 text-gray-500">
+                      {m.created_at
+                        ? new Date(m.created_at).toLocaleString("ar-EG")
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-    </AdminLayout>
+    </div>
   );
 }
