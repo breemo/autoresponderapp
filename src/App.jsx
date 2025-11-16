@@ -1,9 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -11,26 +6,25 @@ import {
   Navigate,
 } from "react-router-dom";
 
-// الصفحات
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
-import ClientDashboard from "./pages/ClientDashboard";
+import Plans from "./pages/Plans";
 
-// الـ Layout
+import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./layouts/AdminLayout";
 
-// ---------- Auth Context ----------
+// ---------------- AUTH CONTEXT ----------------
 const AuthContext = createContext(null);
 
 export function useAuth() {
   return useContext(AuthContext);
 }
 
-// ---------- حماية صفحات الأدمن + وضع الـ Layout ----------
+// ---------------- ADMIN ROUTE ----------------
 function AdminRoute({ children }) {
   const { user } = useAuth();
 
@@ -44,12 +38,11 @@ function AdminRoute({ children }) {
 export default function App() {
   const [user, setUser] = useState(null);
 
-  // تحميل المستخدم عند أول تشغيل
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    const stored = localStorage.getItem("user");
+    if (stored) {
       try {
-        setUser(JSON.parse(storedUser));
+        setUser(JSON.parse(stored));
       } catch {
         localStorage.removeItem("user");
       }
@@ -60,10 +53,10 @@ export default function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* صفحة تسجيل الدخول */}
+          {/* Login */}
           <Route path="/" element={<Login />} />
 
-          {/* صفحات الأدمن */}
+          {/* ADMIN PAGES */}
           <Route
             path="/admin"
             element={
@@ -109,7 +102,16 @@ export default function App() {
             }
           />
 
-          {/* صفحة العميل */}
+          <Route
+            path="/admin/plans"
+            element={
+              <AdminRoute>
+                <Plans />
+              </AdminRoute>
+            }
+          />
+
+          {/* CLIENT PAGE */}
           <Route
             path="/client"
             element={
@@ -120,9 +122,6 @@ export default function App() {
               )
             }
           />
-
-          {/* أي رابط غلط */}
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
