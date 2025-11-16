@@ -9,13 +9,13 @@ import {
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
-
-import AdminClients from "./pages/AdminClients";
-import AdminPlans from "./pages/AdminPlans";
-import AdminClientSettings from "./pages/AdminClientSettings";
+import AdminLayout from "./layouts/AdminLayout";
+import Clients from "./pages/Clients";
+import Messages from "./pages/Messages";
+import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
 
-// ✅ Auth Context
+// Context للمستخدم الحالي
 const AuthContext = createContext(null);
 
 export function useAuth() {
@@ -24,59 +24,63 @@ export function useAuth() {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [bootstrapping, setBootstrapping] = useState(true);
 
-  // تحميل المستخدم من localStorage
+  // نقرأ المستخدم من localStorage عند أول تحميل
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        console.error("Invalid user JSON");
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        setUser(JSON.parse(stored));
       }
+    } catch (err) {
+      console.error("Error reading user from localStorage", err);
+    } finally {
+      setBootstrapping(false);
     }
   }, []);
 
-  const requireAdmin = (element) =>
-    user?.role === "admin" ? element : <Navigate to="/" replace />;
-
-  const requireClient = (element) =>
-    user?.role === "client" ? element : <Navigate to="/" replace />;
+  if (bootstrapping) return null; // ممكن تحط Splash لو حاب
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* Login */}
+          {/* صفحة الدخول */}
           <Route path="/" element={<Login />} />
 
-          {/* Admin area */}
-          <Route
-            path="/admin"
-            element={requireAdmin(<AdminDashboard />)}
-          />
-          <Route
-            path="/admin/clients"
-            element={requireAdmin(<AdminClients />)}
-          />
-          <Route
-            path="/admin/plans"
-            element={requireAdmin(<AdminPlans />)}
-          />
-          <Route
-            path="/admin/client/:id"
-            element={requireAdmin(<AdminClientSettings />)}
-          />
-          <Route
-            path="/admin/settings"
-            element={requireAdmin(<Settings />)}
-          />
-
-          {/* Client dashboard */}
+          {/* Dashboard للعميل العادي */}
           <Route
             path="/client"
-            element={requireClient(<ClientDashboard />)}
+            element={
+              user?.role === "client" ? (
+                <ClientDashboard />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
+
+          {/* منطقة الأدمن مع Layout و Nested Routes */}
+          <Route
+            path="/admin/*"
+            element={
+              user?.role === "admin" ? (
+                <AdminLayout />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="messages" element={<Messages />} />
+            <Route path="auto-replies" element={<AutoReplies />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+
+          {/* أي مسار غريب -> Login */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
