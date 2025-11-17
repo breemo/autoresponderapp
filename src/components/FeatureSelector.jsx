@@ -1,6 +1,4 @@
 import React from "react";
-import FeatureSelector from "../components/FeatureSelector";
-
 export default function FeatureSelector({ selected, setSelected }) {
   const allFeatures = [
     "WhatsApp",
