@@ -1,4 +1,5 @@
 // src/pages/Plans.jsx
+import FeatureSelector from "../components/FeatureSelector";
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
@@ -190,6 +191,8 @@ export default function Plans() {
     }
   }
 
+  const [features, setFeatures] = useState([]);
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">الباقات</h1>
@@ -295,18 +298,20 @@ export default function Plans() {
             <label className="block mb-1 text-sm text-gray-600">
               الميزات (Features)
             </label>
-            <select
-              onChange={handleAddFeature}
-              className="border rounded px-3 py-2 mb-3 w-full md:w-1/2"
-              defaultValue=""
-            >
-              <option value="">اختر ميزة لإضافتها</option>
-              {FEATURE_OPTIONS.map((feat) => (
-                <option key={feat} value={feat}>
-                  {feat}
-                </option>
-              ))}
-            </select>
+           
+            <div className="md:col-span-2">
+              <label className="block mb-1 text-sm text-gray-600">
+                الميزات (Features)
+              </label>
+            
+              <FeatureSelector
+                selected={form.features}
+                setSelected={(items) =>
+                  setForm((prev) => ({ ...prev, features: items }))
+                }
+              />
+          </div>
+
 
             <div className="flex flex-wrap gap-2">
               {form.features.length === 0 && (
