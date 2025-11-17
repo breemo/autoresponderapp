@@ -13,19 +13,18 @@ import {
 
 import Login from "./pages/Login";
 
-// صفحات الأدمن
 import AdminDashboard from "./pages/AdminDashboard";
 import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
-import AdminLayout from "./layouts/AdminLayout";
 
-// صفحات العميل
-import ClientDashboard from "./pages/client/ClientDashboard";
-import ClientMessages from "./pages/client/ClientMessages";
-import ClientAutoReplies from "./pages/client/ClientAutoReplies";
-import ClientSettings from "./pages/client/ClientSettings";
+import ClientDashboard from "./pages/ClientDashboard";
+import ClientMessages from "./pages/ClientMessages";
+import ClientAutoReplies from "./pages/ClientAutoReplies";
+import ClientSettings from "./pages/ClientSettings";
+
+import AdminLayout from "./layouts/AdminLayout";
 import ClientLayout from "./layouts/ClientLayout";
 
 // ---------- Auth Context ----------
@@ -35,7 +34,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// ---------- Route للأدمن مع الـ Layout ----------
+// Route خاصة بالأدمن
 function AdminRoute({ children }) {
   const { user } = useAuth();
 
@@ -46,7 +45,7 @@ function AdminRoute({ children }) {
   return <AdminLayout>{children}</AdminLayout>;
 }
 
-// ---------- Route للعميل مع الـ Layout ----------
+// Route خاصة بالعميل
 function ClientRoute({ children }) {
   const { user } = useAuth();
 
@@ -76,7 +75,7 @@ export default function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* صفحة تسجيل الدخول المشتركة */}
+          {/* Login */}
           <Route path="/" element={<Login />} />
 
           {/* صفحات الأدمن */}
@@ -148,7 +147,7 @@ export default function App() {
           />
           <Route
             path="/client/settings"
-            element={
+            element{
               <ClientRoute>
                 <ClientSettings />
               </ClientRoute>
