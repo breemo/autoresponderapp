@@ -28,7 +28,7 @@ export default function AdminDashboard() {
       // --- العملاء ---
       const { data: clients, error: clientsError } = await supabase
         .from("clients")
-        .select("id, business_name, email, is_active, role, created_at")
+        .select("id, business_name, email, is_active, created_at")
         .order("created_at", { ascending: false });
 
       if (clientsError) throw clientsError;
@@ -36,11 +36,7 @@ export default function AdminDashboard() {
       const totalClients = clients?.length || 0;
 
       const activeClients =
-        clients?.filter((c) =>
-          typeof c.is_active === "boolean"
-            ? c.is_active
-            : c.role !== "disabled"
-        ).length || 0;
+        clients?.filter((c) => c.is_active === true).length || 0;
 
       const recentClients = clients?.slice(0, 5) || [];
 
