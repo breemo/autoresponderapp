@@ -147,7 +147,7 @@ export default function App() {
           />
           <Route
             path="/client/settings"
-            element{
+            element={
               <ClientRoute>
                 <ClientSettings />
               </ClientRoute>
