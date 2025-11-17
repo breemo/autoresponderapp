@@ -27,7 +27,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// Route خاص بالأدمن، بضيف الـ Layout مرّة وحدة
+// Route خاص بالأدمن + يحط الـ Layout مرة واحدة بس
 function AdminRoute({ children }) {
   const { user } = useAuth();
 
@@ -40,8 +40,8 @@ function AdminRoute({ children }) {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [bootLoading, setBootLoading] = useState(true);
 
-  // تحميل المستخدم من localStorage عند أول تحميل
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -51,36 +51,25 @@ export default function App() {
         localStorage.removeItem("user");
       }
     }
+    setBootLoading(false);
   }, []);
 
-  // تحديث الـ user إذا تغيّر localStorage (بعد تسجيل الدخول من Login)
-  useEffect(() => {
-    function handleStorage() {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try {
-          setUser(JSON.parse(stored));
-        } catch {
-          localStorage.removeItem("user");
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    }
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
+  if (bootLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-600">جارِ التحميل...</div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* Login */}
+          {/* تسجيل الدخول */}
           <Route path="/" element={<Login />} />
 
-          {/* صفحات الأدمن – كلها تحت AdminRoute */}
+          {/* صفحات الأدمن */}
           <Route
             path="/admin"
             element={
@@ -122,7 +111,7 @@ export default function App() {
             }
           />
 
-          {/* صفحة العميل (مستقبلاً) */}
+          {/* صفحة العميل (لو حاب تستخدمها لاحقًا) */}
           <Route
             path="/client"
             element={
