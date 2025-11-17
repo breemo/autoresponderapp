@@ -69,58 +69,101 @@ export default function Clients() {
   }
 
   async function handleSave(e) {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  e.preventDefault();
+  setError("");
+  setSuccess("");
 
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    try {
-      setSaving(true);
+  try {
+    setSaving(true);
 
-      // تعديل
-      if (editingClient) {
-        const { error: updateError } = await supabase
-          .from("clients")
-          .update({
-            business_name: form.business_name,
-            email: form.email,
-            plan_id: form.plan_id || null,
-          })
-          .eq("id", editingClient.id);
+    let client = null;
 
-        if (updateError) throw updateError;
+    // --------------------------
+    // 🟦 1) تعديل عميل
+    // --------------------------
+    if (editingClient) {
+      const { error: updateError } = await supabase
+        .from("clients")
+        .update({
+          business_name: form.business_name,
+          email: form.email,
+          plan_id: form.plan_id || null,
+        })
+        .eq("id", editingClient.id);
 
-        setSuccess("تم تحديث بيانات العميل بنجاح");
-        setEditingClient(null);
-      } else {
-        // إضافة
-        const { data, error: insertError } = await supabase
-          .from("clients")
-          .insert({
-            business_name: form.business_name,
-            email: form.email,
-            plan_id: form.plan_id || null,
-            is_active: true,
-          })
-          .select()
-          .single();
+      if (updateError) throw updateError;
 
-        if (insertError) throw insertError;
+      client = editingClient;
 
-        setClients((prev) => [data, ...prev]);
-        setSuccess("تم إضافة العميل بنجاح");
-      }
+      setSuccess("تم تحديث بيانات العميل بنجاح");
+      setEditingClient(null);
 
-      setForm({ business_name: "", email: "", plan_id: "" });
-      await fetchInitial();
-    } catch (err) {
-      console.error("Error saving client:", err);
-      setError(err.message || "فشل في إضافة / تعديل العميل");
-    } finally {
-      setSaving(false);
+    } else {
+      // --------------------------
+      // 🟩 2) إضافة عميل جديد
+      // --------------------------
+      const { data: clientData, error: insertError } = await supabase
+        .from("clients")
+        .insert({
+          business_name: form.business_name,
+          email: form.email,
+          plan_id: form.plan_id || null,
+          is_active: true,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      client = clientData;
+
+      // --------------------------
+      // 🟨 3) إنشاء User تلقائي للعميل الجديد
+      // --------------------------
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .insert({
+          email: form.email,
+          name: form.business_name,
+          password: "12345678", // TODO: غيرها لاحقًا + اعمل reset password
+          role: "client",
+          plan_id: form.plan_id || null,
+          business_name: form.business_name,
+        })
+        .select()
+        .single();
+
+      if (userError) throw userError;
+
+      // --------------------------
+      // 🟧 4) ربط الـ user بالـ client
+      // --------------------------
+      const { error: linkError } = await supabase
+        .from("client_users")
+        .insert({
+          client_id: client.id,
+          user_id: userData.id,
+        });
+
+      if (linkError) throw linkError;
+
+      setSuccess("تم إضافة العميل وإنشاء مستخدم وربطهما بنجاح");
     }
+
+    // Reset
+    setForm({ business_name: "", email: "", plan_id: "" });
+    await fetchInitial();
+
+  } catch (err) {
+    console.error("Error saving client:", err);
+    setError(err.message || "فشل في إضافة / تعديل العميل");
+  } finally {
+    setSaving(false);
   }
+}
+
 
   async function handleToggleActive(client) {
     try {
