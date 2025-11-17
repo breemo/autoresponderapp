@@ -1,58 +1,83 @@
-import React, { useEffect, useState } from "react";
-import AdminLayout from "../layouts/AdminLayout";
+import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import Loader from "../components/Loader";
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function Clients() {
-  const [clients, setClients] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+
   const [form, setForm] = useState({
     business_name: "",
     email: "",
     plan_id: "",
   });
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     fetchInitial();
   }, []);
 
   async function fetchInitial() {
-    setLoading(true);
     try {
-      const [{ data: clientsData, error: cErr }, { data: plansData, error: pErr }] =
+      setLoading(true);
+
+      const [{ data: plansData, error: plansError }, { data: clientsData, error: clientsError }] =
         await Promise.all([
+          supabase.from("plans").select("id,name,price_per_month").order("price_per_month"),
           supabase
             .from("clients")
-            .select("id, business_name, email, plan_id, is_active, created_at")
+            .select("id,business_name,email,plan_id,is_active,role,created_at")
             .order("created_at", { ascending: false }),
-          supabase.from("plans").select("id, name"),
         ]);
 
-      if (cErr) throw cErr;
-      if (pErr) throw pErr;
+      if (plansError) throw plansError;
+      if (clientsError) throw clientsError;
 
-      setClients(clientsData || []);
       setPlans(plansData || []);
+      setClients(clientsData || []);
     } catch (err) {
-      console.error(err);
-      setError("فشل في تحميل بيانات العملاء أو الباقات");
+      console.error("خطأ في جلب البيانات:", err.message);
+      setError("حدث خطأ أثناء تحميل البيانات.");
     } finally {
       setLoading(false);
     }
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  function resetForm() {
+    setForm({ business_name: "", email: "", plan_id: "" });
+    setEditingId(null);
+    setError("");
+  }
 
-  async function addClient() {
-    if (!form.business_name || !form.email) {
-      setError("الاسم التجاري والإيميل مطلوبان");
+  function startEdit(client) {
+    setForm({
+      business_name: client.business_name || "",
+      email: client.email || "",
+      plan_id: client.plan_id || "",
+    });
+    setEditingId(client.id);
+    setError("");
+  }
+
+  async function handleSave(e) {
+    e.preventDefault();
+
+    if (!form.business_name.trim()) {
+      setError("الاسم التجاري مطلوب.");
       return;
     }
-
-    if (!emailRegex.test(form.email)) {
-      setError("الرجاء إدخال بريد إلكتروني صحيح");
+    if (!emailRegex.test(form.email.trim())) {
+      setError("يرجى إدخال بريد إلكتروني صالح.");
+      return;
+    }
+    if (!form.plan_id) {
+      setError("يرجى اختيار باقة للعميل.");
       return;
     }
 
@@ -60,33 +85,36 @@ export default function Clients() {
       setSaving(true);
       setError("");
 
-      // التحقق من أن الإيميل غير مكرر
-      const { data: existing, error: existingErr } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("email", form.email);
+      if (editingId) {
+        const { error: updError } = await supabase
+          .from("clients")
+          .update({
+            business_name: form.business_name.trim(),
+            email: form.email.trim(),
+            plan_id: form.plan_id,
+          })
+          .eq("id", editingId);
 
-      if (existingErr) throw existingErr;
-      if (existing && existing.length > 0) {
-        setError("هذا الإيميل مستخدم بالفعل لعميل آخر");
-        setSaving(false);
-        return;
+        if (updError) throw updError;
+      } else {
+        const { error: insError } = await supabase.from("clients").insert([
+          {
+            business_name: form.business_name.trim(),
+            email: form.email.trim(),
+            plan_id: form.plan_id,
+            is_active: true,
+            role: "client",
+          },
+        ]);
+
+        if (insError) throw insError;
       }
 
-      const { error: insertError } = await supabase.from("clients").insert({
-        business_name: form.business_name,
-        email: form.email,
-        plan_id: form.plan_id || null,
-        is_active: true,
-      });
-
-      if (insertError) throw insertError;
-
-      setForm({ business_name: "", email: "", plan_id: "" });
       await fetchInitial();
+      resetForm();
     } catch (err) {
-      console.error(err);
-      setError("فشل في إضافة العميل");
+      console.error("خطأ في حفظ العميل:", err.message);
+      setError("حدث خطأ أثناء حفظ العميل.");
     } finally {
       setSaving(false);
     }
@@ -100,56 +128,85 @@ export default function Clients() {
         .eq("id", client.id);
 
       if (error) throw error;
-      await fetchInitial();
+
+      setClients((prev) =>
+        prev.map((c) =>
+          c.id === client.id ? { ...c, is_active: !client.is_active } : c
+        )
+      );
     } catch (err) {
-      console.error(err);
-      setError("فشل في تحديث حالة العميل");
+      console.error("خطأ في تغيير حالة العميل:", err.message);
+      alert("تعذر تغيير حالة العميل.");
     }
   }
 
-  async function deleteClient(client) {
-    if (!window.confirm("هل أنت متأكد من حذف هذا العميل؟")) return;
+  async function handleDelete(client) {
+    if (!window.confirm(`هل أنت متأكد من حذف العميل "${client.business_name}"؟`))
+      return;
 
     try {
-      const { error } = await supabase
-        .from("clients")
-        .delete()
-        .eq("id", client.id);
-
+      const { error } = await supabase.from("clients").delete().eq("id", client.id);
       if (error) throw error;
-      await fetchInitial();
+
+      setClients((prev) => prev.filter((c) => c.id !== client.id));
     } catch (err) {
-      console.error(err);
-      setError("فشل في حذف العميل");
+      console.error("خطأ في حذف العميل:", err.message);
+      alert("تعذر حذف العميل.");
     }
+  }
+
+  const filteredClients = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return clients;
+
+    return clients.filter((c) => {
+      const name = c.business_name?.toLowerCase() || "";
+      const email = c.email?.toLowerCase() || "";
+      return name.includes(term) || email.includes(term);
+    });
+  }, [clients, search]);
+
+  const planMap = useMemo(() => {
+    const m = new Map();
+    plans.forEach((p) => m.set(p.id, p));
+    return m;
+  }, [plans]);
+
+  if (loading) {
+    return <Loader message="جارِ تحميل بيانات العملاء..." />;
   }
 
   return (
-    <AdminLayout>
-      <h2 className="text-2xl font-semibold mb-4">العملاء</h2>
+    <div>
+      <h1 className="text-2xl font-bold mb-2">العملاء</h1>
       <p className="text-gray-500 mb-6">
-        إدارة عملاء نظام Auto Responder وتعيين الباقات لهم.
+        يمكنك إضافة عميل جديد، تفعيل/تعطيل، تعديل أو حذف إعداداته.
       </p>
 
-      {error && (
-        <div className="bg-red-50 text-red-600 border border-red-200 rounded px-4 py-2 mb-4 text-sm">
-          {error}
-        </div>
-      )}
+      {/* فورم إضافة/تعديل عميل */}
+      <div className="bg-white rounded-xl shadow p-6 mb-8">
+        <h2 className="text-lg font-semibold mb-4">
+          {editingId ? "تعديل بيانات العميل" : "إضافة عميل جديد"}
+        </h2>
 
-      {/* نموذج إضافة عميل جديد */}
-      <div className="bg-white shadow rounded-xl p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">➕ إضافة عميل جديد</h3>
+        {error && (
+          <div className="mb-4 text-sm text-red-600 bg-red-50 px-3 py-2 rounded">
+            {error}
+          </div>
+        )}
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <form
+          className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end"
+          onSubmit={handleSave}
+        >
           <div>
             <label className="block text-sm mb-1">الاسم التجاري</label>
             <input
               type="text"
-              className="border w-full rounded px-3 py-2 text-sm"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={form.business_name}
               onChange={(e) =>
-                setForm({ ...form, business_name: e.target.value })
+                setForm((f) => ({ ...f, business_name: e.target.value }))
               }
             />
           </div>
@@ -158,99 +215,157 @@ export default function Clients() {
             <label className="block text-sm mb-1">الإيميل</label>
             <input
               type="email"
-              className="border w-full rounded px-3 py-2 text-sm"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, email: e.target.value }))
+              }
             />
           </div>
 
           <div>
             <label className="block text-sm mb-1">الباقة</label>
             <select
-              className="border w-full rounded px-3 py-2 text-sm"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={form.plan_id}
-              onChange={(e) => setForm({ ...form, plan_id: e.target.value })}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, plan_id: e.target.value }))
+              }
             >
-              <option value="">بدون باقة</option>
+              <option value="">اختر الباقة</option>
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name}
+                  {p.name} - ${p.price_per_month}/mo
                 </option>
               ))}
             </select>
           </div>
-        </div>
 
-        <button
-          onClick={addClient}
-          disabled={saving}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-60"
-        >
-          {saving ? "جارِ الحفظ..." : "حفظ العميل"}
-        </button>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 rounded-lg disabled:opacity-60"
+            >
+              {saving
+                ? "جارِ الحفظ..."
+                : editingId
+                ? "تحديث بيانات العميل"
+                : "إضافة عميل"}
+            </button>
+
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-3 py-2 text-sm border rounded-lg text-gray-600 hover:bg-gray-50"
+              >
+                إلغاء التعديل
+              </button>
+            )}
+          </div>
+        </form>
       </div>
 
-      {/* جدول العملاء */}
-      <div className="bg-white shadow rounded-xl p-6">
-        <h3 className="text-lg font-semibold mb-4">قائمة العملاء</h3>
+      {/* بحث + جدول العملاء */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
+          <h2 className="text-lg font-semibold">قائمة العملاء</h2>
+          <input
+            type="text"
+            placeholder="بحث بالاسم أو الإيميل..."
+            className="w-full md:w-64 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-        {loading ? (
-          <p className="text-gray-500 text-sm">جارِ تحميل العملاء...</p>
-        ) : clients.length === 0 ? (
-          <p className="text-gray-400 text-sm">لا يوجد عملاء حتى الآن.</p>
+        {filteredClients.length === 0 ? (
+          <p className="text-gray-400 text-sm">لا يوجد عملاء بعد.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b bg-gray-50">
-                <tr className="text-left text-gray-600">
-                  <th className="py-2 px-2">الاسم التجاري</th>
-                  <th className="py-2 px-2">الإيميل</th>
-                  <th className="py-2 px-2">الباقة</th>
-                  <th className="py-2 px-2">الحالة</th>
-                  <th className="py-2 px-2 text-center">إجراءات</th>
+              <thead className="bg-gray-50 border-b">
+                <tr className="text-gray-600">
+                  <th className="py-2 text-right">الاسم التجاري</th>
+                  <th className="py-2 text-right">الإيميل</th>
+                  <th className="py-2 text-right">الباقة</th>
+                  <th className="py-2 text-right">الحالة</th>
+                  <th className="py-2 text-right">تاريخ الإنشاء</th>
+                  <th className="py-2 text-right">إجراءات</th>
                 </tr>
               </thead>
               <tbody>
-                {clients.map((c) => (
-                  <tr key={c.id} className="border-b hover:bg-gray-50">
-                    <td className="py-2 px-2">{c.business_name}</td>
-                    <td className="py-2 px-2">{c.email}</td>
-                    <td className="py-2 px-2">
-                      {plans.find((p) => p.id === c.plan_id)?.name ||
-                        "بدون باقة"}
-                    </td>
-                    <td className="py-2 px-2">
-                      {c.is_active === false ? (
-                        <span className="text-red-500">معطّل</span>
-                      ) : (
-                        <span className="text-green-600">مفعّل</span>
-                      )}
-                    </td>
-                    <td className="py-2 px-2 flex gap-2 justify-center">
-                      <button
-                        onClick={() => toggleActive(c)}
-                        className={`px-3 py-1 rounded text-white text-xs ${
-                          c.is_active === false
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-yellow-500 hover:bg-yellow-600"
-                        }`}
-                      >
-                        {c.is_active === false ? "تفعيل" : "تعطيل"}
-                      </button>
-                      <button
-                        onClick={() => deleteClient(c)}
-                        className="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-xs"
-                      >
-                        حذف
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredClients.map((c) => {
+                  const plan = planMap.get(c.plan_id);
+                  return (
+                    <tr key={c.id} className="border-b last:border-0">
+                      <td className="py-2">{c.business_name}</td>
+                      <td className="py-2">{c.email}</td>
+                      <td className="py-2">
+                        {plan ? (
+                          <>
+                            {plan.name}{" "}
+                            <span className="text-xs text-gray-400">
+                              (${plan.price_per_month}/mo)
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-gray-400 text-xs">
+                            بدون باقة
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2">
+                        {c.is_active ? (
+                          <span className="text-green-600 font-medium">
+                            مفعّل
+                          </span>
+                        ) : (
+                          <span className="text-red-500 font-medium">
+                            معطّل
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-2 text-gray-500">
+                        {c.created_at
+                          ? new Date(c.created_at).toLocaleString("ar-EG")
+                          : "-"}
+                      </td>
+                      <td className="py-2">
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            onClick={() => toggleActive(c)}
+                            className={`px-2 py-1 rounded text-xs text-white ${
+                              c.is_active
+                                ? "bg-green-500 hover:bg-green-600"
+                                : "bg-gray-500 hover:bg-gray-600"
+                            }`}
+                          >
+                            {c.is_active ? "تعطيل" : "تفعيل"}
+                          </button>
+                          <button
+                            onClick={() => startEdit(c)}
+                            className="px-2 py-1 rounded text-xs bg-yellow-500 hover:bg-yellow-600 text-white"
+                          >
+                            تعديل
+                          </button>
+                          <button
+                            onClick={() => handleDelete(c)}
+                            className="px-2 py-1 rounded text-xs bg-red-500 hover:bg-red-600 text-white"
+                          >
+                            حذف
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
       </div>
-    </AdminLayout>
+    </div>
   );
 }
