@@ -12,13 +12,21 @@ import {
 } from "react-router-dom";
 
 import Login from "./pages/Login";
+
+// صفحات الأدمن
 import AdminDashboard from "./pages/AdminDashboard";
 import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
-import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./layouts/AdminLayout";
+
+// صفحات العميل
+import ClientDashboard from "./pages/client/ClientDashboard";
+import ClientMessages from "./pages/client/ClientMessages";
+import ClientAutoReplies from "./pages/client/ClientAutoReplies";
+import ClientSettings from "./pages/client/ClientSettings";
+import ClientLayout from "./layouts/ClientLayout";
 
 // ---------- Auth Context ----------
 const AuthContext = createContext(null);
@@ -27,7 +35,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// Route خاص بالأدمن + يحط الـ Layout مرة واحدة بس
+// ---------- Route للأدمن مع الـ Layout ----------
 function AdminRoute({ children }) {
   const { user } = useAuth();
 
@@ -38,10 +46,21 @@ function AdminRoute({ children }) {
   return <AdminLayout>{children}</AdminLayout>;
 }
 
+// ---------- Route للعميل مع الـ Layout ----------
+function ClientRoute({ children }) {
+  const { user } = useAuth();
+
+  if (!user || user.role !== "client") {
+    return <Navigate to="/" replace />;
+  }
+
+  return <ClientLayout>{children}</ClientLayout>;
+}
+
 export default function App() {
   const [user, setUser] = useState(null);
-  const [bootLoading, setBootLoading] = useState(true);
 
+  // تحميل المستخدم من localStorage عند أول تحميل
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -51,22 +70,13 @@ export default function App() {
         localStorage.removeItem("user");
       }
     }
-    setBootLoading(false);
   }, []);
-
-  if (bootLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-gray-600">جارِ التحميل...</div>
-      </div>
-    );
-  }
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* تسجيل الدخول */}
+          {/* صفحة تسجيل الدخول المشتركة */}
           <Route path="/" element={<Login />} />
 
           {/* صفحات الأدمن */}
@@ -111,15 +121,37 @@ export default function App() {
             }
           />
 
-          {/* صفحة العميل (لو حاب تستخدمها لاحقًا) */}
+          {/* صفحات العميل */}
           <Route
             path="/client"
             element={
-              user?.role === "client" ? (
+              <ClientRoute>
                 <ClientDashboard />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/client/messages"
+            element={
+              <ClientRoute>
+                <ClientMessages />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/client/auto-replies"
+            element={
+              <ClientRoute>
+                <ClientAutoReplies />
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/client/settings"
+            element={
+              <ClientRoute>
+                <ClientSettings />
+              </ClientRoute>
             }
           />
         </Routes>
