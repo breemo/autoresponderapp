@@ -1,11 +1,10 @@
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../App";
 
 export default function AdminLayout({ children }) {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { user, setUser } = useAuth();
 
   function logout() {
     localStorage.removeItem("user");
@@ -13,50 +12,56 @@ export default function AdminLayout({ children }) {
     navigate("/");
   }
 
-  const menuItems = [
-    { path: "/admin", label: "الصفحة الرئيسية" },
-    { path: "/admin/clients", label: "العملاء" },
-    { path: "/admin/auto-replies", label: "الردود التلقائية" },
-    { path: "/admin/messages", label: "الرسائل" },
-    { path: "/admin/settings", label: "الإعدادات" },
-  ];
+  const linkClasses = ({ isActive }) =>
+    `block px-4 py-2 rounded-lg text-sm ${
+      isActive
+        ? "bg-blue-600 text-white"
+        : "text-gray-700 hover:bg-blue-50"
+    }`;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md p-6 flex flex-col border-r">
-        <h1 className="text-xl font-bold text-blue-600 mb-6">
-          AutoResponder Admin
-        </h1>
+      <aside className="w-64 bg-white border-r flex flex-col">
+        <div className="px-6 py-5 border-b">
+          <div className="text-xs text-gray-400">AutoResponder</div>
+          <div className="font-bold text-lg text-blue-600">Admin</div>
+          {user && (
+            <div className="text-xs text-gray-500 mt-1 truncate">
+              {user.email}
+            </div>
+          )}
+        </div>
 
-        <nav className="flex flex-col gap-2 flex-1">
-          {menuItems.map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`rounded px-3 py-2 text-sm ${
-                  active
-                    ? "bg-blue-50 text-blue-700 font-semibold"
-                    : "text-gray-700 hover:bg-gray-100"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          <NavLink to="/admin" className={linkClasses} end>
+            الصفحة الرئيسية
+          </NavLink>
+          <NavLink to="/admin/clients" className={linkClasses}>
+            العملاء
+          </NavLink>
+          <NavLink to="/admin/messages" className={linkClasses}>
+            الرسائل
+          </NavLink>
+          <NavLink to="/admin/auto-replies" className={linkClasses}>
+            الردود التلقائية
+          </NavLink>
+          <NavLink to="/admin/settings" className={linkClasses}>
+            الإعدادات
+          </NavLink>
         </nav>
 
-        <button
-          onClick={logout}
-          className="mt-4 bg-red-500 text-white py-2 rounded text-sm hover:bg-red-600"
-        >
-          تسجيل الخروج
-        </button>
+        <div className="px-4 py-4 border-t">
+          <button
+            onClick={logout}
+            className="w-full bg-red-500 hover:bg-red-600 text-white text-sm py-2 rounded-lg"
+          >
+            تسجيل الخروج
+          </button>
+        </div>
       </aside>
 
-      {/* المحتوى */}
+      {/* Content */}
       <main className="flex-1 p-8">{children}</main>
     </div>
   );
