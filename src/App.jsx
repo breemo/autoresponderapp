@@ -21,6 +21,7 @@ import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./layouts/AdminLayout";
 import Plans from "./pages/Plans"; // ✅ صفحة الباقات الجديدة
+import ClientUsers from "./pages/ClientUsers";
 
 // ---------- Auth Context ----------
 const AuthContext = createContext(null);
@@ -124,6 +125,15 @@ export default function App() {
               )
             }
           />
+          <Route
+              path="/admin/client-users/:clientId"
+              element={
+                <AdminRoute>
+                  <ClientUsers />
+                </AdminRoute>
+              }
+            />
+
         </Routes>
       </Router>
     </AuthContext.Provider>
