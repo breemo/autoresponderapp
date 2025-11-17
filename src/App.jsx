@@ -1,4 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,19 +17,17 @@ import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
-import Plans from "./pages/Plans";
-
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./layouts/AdminLayout";
 
-// ---------------- AUTH CONTEXT ----------------
+// ---------- Auth Context ----------
 const AuthContext = createContext(null);
 
 export function useAuth() {
   return useContext(AuthContext);
 }
 
-// ---------------- ADMIN ROUTE ----------------
+// Route خاص بالأدمن، بضيف الـ Layout مرّة وحدة
 function AdminRoute({ children }) {
   const { user } = useAuth();
 
@@ -38,6 +41,7 @@ function AdminRoute({ children }) {
 export default function App() {
   const [user, setUser] = useState(null);
 
+  // تحميل المستخدم من localStorage عند أول تحميل
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -49,6 +53,26 @@ export default function App() {
     }
   }, []);
 
+  // تحديث الـ user إذا تغيّر localStorage (بعد تسجيل الدخول من Login)
+  useEffect(() => {
+    function handleStorage() {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored));
+        } catch {
+          localStorage.removeItem("user");
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    }
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
@@ -56,7 +80,7 @@ export default function App() {
           {/* Login */}
           <Route path="/" element={<Login />} />
 
-          {/* ADMIN PAGES */}
+          {/* صفحات الأدمن – كلها تحت AdminRoute */}
           <Route
             path="/admin"
             element={
@@ -65,7 +89,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/clients"
             element={
@@ -74,7 +97,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/messages"
             element={
@@ -83,7 +105,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/auto-replies"
             element={
@@ -92,7 +113,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/settings"
             element={
@@ -102,16 +122,7 @@ export default function App() {
             }
           />
 
-          <Route
-            path="/admin/plans"
-            element={
-              <AdminRoute>
-                <Plans />
-              </AdminRoute>
-            }
-          />
-
-          {/* CLIENT PAGE */}
+          {/* صفحة العميل (مستقبلاً) */}
           <Route
             path="/client"
             element={
