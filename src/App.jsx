@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, {
   createContext,
   useContext,
@@ -12,20 +13,14 @@ import {
 } from "react-router-dom";
 
 import Login from "./pages/Login";
-
 import AdminDashboard from "./pages/AdminDashboard";
 import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
-
 import ClientDashboard from "./pages/ClientDashboard";
-import ClientMessages from "./pages/ClientMessages";
-import ClientAutoReplies from "./pages/ClientAutoReplies";
-import ClientSettings from "./pages/ClientSettings";
-
 import AdminLayout from "./layouts/AdminLayout";
-import ClientLayout from "./layouts/ClientLayout";
+import Plans from "./pages/Plans"; // ✅ صفحة الباقات الجديدة
 
 // ---------- Auth Context ----------
 const AuthContext = createContext(null);
@@ -34,7 +29,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// Route خاصة بالأدمن
+// route خاصة بالأدمن، بتحط الـ layout مرّة واحدة
 function AdminRoute({ children }) {
   const { user } = useAuth();
 
@@ -43,17 +38,6 @@ function AdminRoute({ children }) {
   }
 
   return <AdminLayout>{children}</AdminLayout>;
-}
-
-// Route خاصة بالعميل
-function ClientRoute({ children }) {
-  const { user } = useAuth();
-
-  if (!user || user.role !== "client") {
-    return <Navigate to="/" replace />;
-  }
-
-  return <ClientLayout>{children}</ClientLayout>;
 }
 
 export default function App() {
@@ -78,7 +62,7 @@ export default function App() {
           {/* Login */}
           <Route path="/" element={<Login />} />
 
-          {/* صفحات الأدمن */}
+          {/* صفحات الأدمن – كلها تحت AdminRoute */}
           <Route
             path="/admin"
             element={
@@ -111,6 +95,15 @@ export default function App() {
               </AdminRoute>
             }
           />
+          {/* ✅ صفحة الباقات الجديدة */}
+          <Route
+            path="/admin/plans"
+            element={
+              <AdminRoute>
+                <Plans />
+              </AdminRoute>
+            }
+          />
           <Route
             path="/admin/settings"
             element={
@@ -120,37 +113,15 @@ export default function App() {
             }
           />
 
-          {/* صفحات العميل */}
+          {/* صفحة العميل */}
           <Route
             path="/client"
             element={
-              <ClientRoute>
+              user?.role === "client" ? (
                 <ClientDashboard />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/client/messages"
-            element={
-              <ClientRoute>
-                <ClientMessages />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/client/auto-replies"
-            element={
-              <ClientRoute>
-                <ClientAutoReplies />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/client/settings"
-            element={
-              <ClientRoute>
-                <ClientSettings />
-              </ClientRoute>
+              ) : (
+                <Navigate to="/" replace />
+              )
             }
           />
         </Routes>
