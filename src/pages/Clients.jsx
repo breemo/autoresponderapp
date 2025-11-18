@@ -357,30 +357,35 @@ export default function Clients() {
                         {c.is_active ? "مفعّل" : "معطّل"}
                       </button>
                     </td>
-<td className="py-2 text-center space-x-2 space-x-reverse">
-  <button
-    onClick={() => startEdit(c)}
-    className="px-3 py-1 rounded bg-yellow-100 text-yellow-800 text-xs"
-  >
-    تعديل
-  </button>
+                    <td className="py-2 text-center space-x-2 space-x-reverse">
+                      <button
+                        onClick={() => startEdit(c)}
+                        className="px-3 py-1 rounded bg-yellow-100 text-yellow-800 text-xs"
+                      >
+                        تعديل
+                      </button>
+                    
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="px-3 py-1 rounded bg-red-100 text-red-700 text-xs"
+                      >
+                        حذف
+                      </button>
+                    
+               
 
-  <button
-    onClick={() => handleDelete(c.id)}
-    className="px-3 py-1 rounded bg-red-100 text-red-700 text-xs"
-  >
-    حذف
-  </button>
 
-  <button
-    onClick={() => {
-      window.location.href = `/admin/client-users/${c.id}`;
-    }}
+
+                        <button
+    onClick={() => (window.location.href = `/admin/client-users/${c.id}`)}
     className="px-3 py-1 rounded bg-blue-100 text-blue-700 text-xs"
   >
     المستخدمين
   </button>
-</td>
+
+
+                      
+                    </td>
 
                   </tr>
                 );
