@@ -129,8 +129,8 @@ export default function Clients() {
           name: form.business_name,
           password: "12345", // TODO: غيرها لاحقًا + اعمل reset password
           role: "client",
-          plan_id: form.plan_id || null,
-        //  business_name: form.business_name,
+          //plan_id: form.plan_id || null,
+          //business_name: form.business_name,
         })
         .select()
         .single();
