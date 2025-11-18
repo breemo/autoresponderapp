@@ -65,32 +65,28 @@ export default function App() {
 
           {/* صفحات الأدمن – كلها تحت AdminRoute */}
           <Route
-            path="/admin"
-            element={
+            path="/admin" element={
               <AdminRoute>
                 <AdminDashboard />
               </AdminRoute>
             }
           />
           <Route
-            path="/admin/clients"
-            element={
+            path="/admin/clients" element={
               <AdminRoute>
                 <Clients />
               </AdminRoute>
             }
           />
           <Route
-            path="/admin/messages"
-            element={
+            path="/admin/messages" element={
               <AdminRoute>
                 <Messages />
               </AdminRoute>
             }
           />
           <Route
-            path="/admin/auto-replies"
-            element={
+            path="/admin/auto-replies" element={
               <AdminRoute>
                 <AutoReplies />
               </AdminRoute>
@@ -98,16 +94,14 @@ export default function App() {
           />
           {/* ✅ صفحة الباقات الجديدة */}
           <Route
-            path="/admin/plans"
-            element={
+            path="/admin/plans" element={
               <AdminRoute>
                 <Plans />
               </AdminRoute>
             }
           />
           <Route
-            path="/admin/settings"
-            element={
+            path="/admin/settings" element={
               <AdminRoute>
                 <Settings />
               </AdminRoute>
@@ -116,8 +110,7 @@ export default function App() {
 
           {/* صفحة العميل */}
           <Route
-            path="/client"
-            element={
+            path="/client" element={
               user?.role === "client" ? (
                 <ClientDashboard />
               ) : (
@@ -126,13 +119,14 @@ export default function App() {
             }
           />
           <Route
-              path="/admin/client-users/:clientId"
-              element={
+              path="/admin/client-users/:clientId" element={
                 <AdminRoute>
                   <ClientUsers />
                 </AdminRoute>
               }
             />
+
+          <Route path="client-users/:clientId" element={<ClientUsers />} />
 
         </Routes>
       </Router>
