@@ -126,11 +126,11 @@ export default function Clients() {
         .from("users")
         .insert({
           email: form.email,
-          name: form.name,
+          name: form.business_name,
           password: "12345", // TODO: غيرها لاحقًا + اعمل reset password
           role: "client",
           plan_id: form.plan_id || null,
-          business_name: form.business_name,
+        //  business_name: form.business_name,
         })
         .select()
         .single();
