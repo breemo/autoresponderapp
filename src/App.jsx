@@ -60,74 +60,15 @@ export default function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* Login */}
-          <Route path="/" element={<Login />} />
-
-          {/* صفحات الأدمن – كلها تحت AdminRoute */}
-          <Route
-            path="/admin" element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/clients" element={
-              <AdminRoute>
-                <Clients />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/messages" element={
-              <AdminRoute>
-                <Messages />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/auto-replies" element={
-              <AdminRoute>
-                <AutoReplies />
-              </AdminRoute>
-            }
-          />
-          {/* ✅ صفحة الباقات الجديدة */}
-          <Route
-            path="/admin/plans" element={
-              <AdminRoute>
-                <Plans />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/settings" element={
-              <AdminRoute>
-                <Settings />
-              </AdminRoute>
-            }
-          />
-
-          {/* صفحة العميل */}
-          <Route
-            path="/client" element={
-              user?.role === "client" ? (
-                <ClientDashboard />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-              path="/admin/client-users/:clientId" element={
-                <AdminRoute>
-                  <ClientUsers />
-                </AdminRoute>
-              }
-            />
-
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>}/>
+          <Route path="/admin/clients" element={<AdminRoute><Clients /></AdminRoute>}/>
+          <Route path="/client" element={user?.role === "client" ? (<ClientDashboard />) : (<Navigate to="/" replace />)}/>
+          <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>}/>
+          <Route path="/admin/messages" element={<AdminRoute><Messages /></AdminRoute>}/>
           <Route path="client-users/:clientId" element={<ClientUsers />} />
-
+          <Route path="/admin/plans" element={<AdminRoute><Plans /></AdminRoute>}/>
+          <Route path="/admin/auto-replies" element={<AdminRoute><AutoReplies /></AdminRoute>}/>
+          <Route path="/" element={<Login />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
