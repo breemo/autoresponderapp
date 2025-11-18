@@ -1,5 +1,10 @@
 // src/App.jsx
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -16,31 +21,35 @@ import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./layouts/AdminLayout";
 import Plans from "./pages/Plans";
-
-import ClientUsers from "./pages/ClientUsers";
+import ClientUsers from "./pages/client/ClientUsers"; // حسب مسارك الحالي
+import ClientLayout from "./layouts/ClientLayout";   // ✅ الجديد
 
 // ---------- Auth Context ----------
 const AuthContext = createContext(null);
-
 export function useAuth() {
   return useContext(AuthContext);
 }
 
-// حماية صفحات الأدمن
+// ---------- Routes Helpers ----------
 function AdminRoute({ children }) {
   const { user } = useAuth();
-
   if (!user || user.role !== "admin") {
     return <Navigate to="/" replace />;
   }
-
   return <AdminLayout>{children}</AdminLayout>;
+}
+
+function ClientRoute({ children }) {
+  const { user } = useAuth();
+  if (!user || user.role !== "client") {
+    return <Navigate to="/" replace />;
+  }
+  return <ClientLayout>{children}</ClientLayout>;
 }
 
 export default function App() {
   const [user, setUser] = useState(null);
 
-  // تحميل المستخدم من localStorage عند أول تحميل
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -56,7 +65,10 @@ export default function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          {/* صفحات الأدمن */}
+          {/* Login */}
+          <Route path="/" element={<Login />} />
+
+          {/* Admin */}
           <Route
             path="/admin"
             element={
@@ -65,7 +77,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/clients"
             element={
@@ -74,7 +85,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/messages"
             element={
@@ -83,16 +93,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
-          <Route
-            path="/admin/settings"
-            element={
-              <AdminRoute>
-                <Settings />
-              </AdminRoute>
-            }
-          />
-
           <Route
             path="/admin/auto-replies"
             element={
@@ -101,7 +101,14 @@ export default function App() {
               </AdminRoute>
             }
           />
-
+          <Route
+            path="/admin/settings"
+            element={
+              <AdminRoute>
+                <Settings />
+              </AdminRoute>
+            }
+          />
           <Route
             path="/admin/plans"
             element={
@@ -110,8 +117,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
-          {/* صفحة المستخدمين الخاصة بكل عميل */}
           <Route
             path="/admin/client-users/:clientId"
             element={
@@ -121,20 +126,42 @@ export default function App() {
             }
           />
 
-          {/* صفحة العملاء */}
+          {/* Client */}
           <Route
             path="/client"
             element={
-              user?.role === "client" ? (
+              <ClientRoute>
                 <ClientDashboard />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ClientRoute>
             }
           />
-
-          {/* صفحة تسجيل الدخول */}
-          <Route path="/" element={<Login />} />
+          <Route
+            path="/client/messages"
+            element={
+              <ClientRoute>
+                {/* لو عندك صفحة ClientMessages.jsx استبدلها هنا */}
+                <div>صفحة رسائل العميل (بنشبّكها لاحقاً)</div>
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/client/auto-replies"
+            element={
+              <ClientRoute>
+                {/* ClientAutoReplies */}
+                <div>صفحة الردود التلقائية للعميل</div>
+              </ClientRoute>
+            }
+          />
+          <Route
+            path="/client/settings"
+            element={
+              <ClientRoute>
+                {/* ClientSettings */}
+                <div>إعدادات العميل</div>
+              </ClientRoute>
+            }
+          />
         </Routes>
       </Router>
     </AuthContext.Provider>
