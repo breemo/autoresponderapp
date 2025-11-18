@@ -21,7 +21,7 @@ import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./layouts/AdminLayout";
 import Plans from "./pages/Plans";
-import ClientUsers from "./pages/client/ClientUsers"; // حسب مسارك الحالي
+import ClientUsers from "./pages/ClientUsers"; // حسب مسارك الحالي
 import ClientLayout from "./layouts/ClientLayout";   // ✅ الجديد
 
 // ---------- Auth Context ----------
