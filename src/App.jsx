@@ -1,10 +1,5 @@
 // src/App.jsx
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -20,7 +15,7 @@ import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./layouts/AdminLayout";
-import Plans from "./pages/Plans"; // ✅ صفحة الباقات الجديدة
+import Plans from "./pages/Plans";
 import ClientUsers from "./pages/ClientUsers";
 
 // ---------- Auth Context ----------
@@ -30,7 +25,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-// route خاصة بالأدمن، بتحط الـ layout مرّة واحدة
+// حماية صفحات الأدمن
 function AdminRoute({ children }) {
   const { user } = useAuth();
 
@@ -60,15 +55,85 @@ export default function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <Router>
         <Routes>
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>}/>
-          <Route path="/admin/clients" element={<AdminRoute><Clients /></AdminRoute>}/>
-          <Route path="/client" element={user?.role === "client" ? (<ClientDashboard />) : (<Navigate to="/" replace />)}/>
-          <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>}/>
-          <Route path="/admin/messages" element={<AdminRoute><Messages /></AdminRoute>}/>
-          <Route path="/admin/plans" element={<AdminRoute><Plans /></AdminRoute>}/>
-          <Route path="/admin/auto-replies" element={<AdminRoute><AutoReplies /></AdminRoute>}/>
-          <Route path="/" element={<Login />} />          
-          <Route path="/admin/client-users/:clientId" element={<AdminRoute><ClientUsers /></AdminRoute>}/>
+          {/* صفحات الأدمن */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/clients"
+            element={
+              <AdminRoute>
+                <Clients />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/messages"
+            element={
+              <AdminRoute>
+                <Messages />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/settings"
+            element={
+              <AdminRoute>
+                <Settings />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/auto-replies"
+            element={
+              <AdminRoute>
+                <AutoReplies />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/plans"
+            element={
+              <AdminRoute>
+                <Plans />
+              </AdminRoute>
+            }
+          />
+
+          {/* صفحة المستخدمين الخاصة بكل عميل */}
+          <Route
+            path="/admin/client-users/:clientId"
+            element={
+              <AdminRoute>
+                <ClientUsers />
+              </AdminRoute>
+            }
+          />
+
+          {/* صفحة العملاء */}
+          <Route
+            path="/client"
+            element={
+              user?.role === "client" ? (
+                <ClientDashboard />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+
+          {/* صفحة تسجيل الدخول */}
+          <Route path="/" element={<Login />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
