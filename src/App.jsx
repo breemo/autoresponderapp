@@ -65,10 +65,10 @@ export default function App() {
           <Route path="/client" element={user?.role === "client" ? (<ClientDashboard />) : (<Navigate to="/" replace />)}/>
           <Route path="/admin/settings" element={<AdminRoute><Settings /></AdminRoute>}/>
           <Route path="/admin/messages" element={<AdminRoute><Messages /></AdminRoute>}/>
-          <Route path="client-users/:clientId" element={<ClientUsers />} />
           <Route path="/admin/plans" element={<AdminRoute><Plans /></AdminRoute>}/>
           <Route path="/admin/auto-replies" element={<AdminRoute><AutoReplies /></AdminRoute>}/>
-          <Route path="/" element={<Login />} />
+          <Route path="/" element={<Login />} />          
+          <Route path="/admin/client-users/:clientId" element={<AdminRoute><ClientUsers /></AdminRoute>}/>
         </Routes>
       </Router>
     </AuthContext.Provider>
