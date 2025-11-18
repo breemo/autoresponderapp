@@ -10,13 +10,14 @@ export default function ClientDashboard() {
     planName: "",
     maxMessages: null,
   });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!user?.id) return;
-    fetchStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (user?.id) {
+      fetchStats();
+    }
   }, [user?.id]);
 
   async function fetchStats() {
@@ -26,7 +27,7 @@ export default function ClientDashboard() {
 
       const clientId = user.id;
 
-      // إجمالي الرسائل
+      // --- إجمالي الرسائل ---
       const { count: totalMessages, error: msgError } = await supabase
         .from("messages")
         .select("*", { count: "exact", head: true })
@@ -34,7 +35,7 @@ export default function ClientDashboard() {
 
       if (msgError) throw msgError;
 
-      // عدد الردود التلقائية
+      // --- عدد الردود التلقائية ---
       const { count: autoRepliesCount, error: arError } = await supabase
         .from("auto_replies")
         .select("*", { count: "exact", head: true })
@@ -42,7 +43,7 @@ export default function ClientDashboard() {
 
       if (arError) throw arError;
 
-      // بيانات الخطة
+      // --- بيانات الباقة ---
       let planName = "";
       let maxMessages = null;
 
@@ -62,11 +63,12 @@ export default function ClientDashboard() {
       }
 
       setStats({
-        totalMessages: totalMessages || 0,
-        autoRepliesCount: autoRepliesCount || 0,
+        totalMessages,
+        autoRepliesCount,
         planName,
         maxMessages,
       });
+
     } catch (err) {
       console.error("خطأ في جلب بيانات العميل:", err.message);
       setError("حدث خطأ أثناء جلب بيانات لوحة التحكم.");
@@ -78,50 +80,68 @@ export default function ClientDashboard() {
   const displayName = user?.business_name || user?.name || "عميلنا الكريم";
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-2">
-        مرحباً {displayName} 👋
-      </h1>
-      <p className="text-gray-500 mb-8">
-        لوحة تحكم AutoResponder لمتابعة رسائلك والردود التلقائية وخطتك الحالية.
-      </p>
+    <div className="p-8">
 
+      {/* ====== HEADER ====== */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-1">
+          مرحباً {displayName} 👋
+        </h1>
+        <p className="text-gray-500 text-sm">
+          تابع نشاط حسابك، الرسائل، الردود التلقائية والباقات.
+        </p>
+      </div>
+
+      {/* ====== ERROR MESSAGE ====== */}
       {error && (
         <div className="mb-4 bg-red-50 text-red-700 px-4 py-2 rounded border border-red-200 text-sm">
           {error}
         </div>
       )}
 
+      {/* ====== LOADING ====== */}
       {loading ? (
         <p className="text-gray-500">جارِ تحميل البيانات...</p>
       ) : (
         <>
-          {/* البطاقات العلوية */}
+          {/* ====== STATS CARDS ====== */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-white shadow rounded-xl p-6 text-center">
-              <p className="text-gray-500 mb-2">إجمالي الرسائل</p>
-              <p className="text-3xl font-bold text-blue-600">
+
+            <div className="bg-white border shadow-sm rounded-xl p-6 hover:shadow-md transition text-center">
+              <p className="text-gray-500 text-sm">إجمالي الرسائل</p>
+              <p className="text-4xl font-extrabold text-blue-600 mt-2">
                 {stats.totalMessages}
               </p>
             </div>
 
-            <div className="bg-white shadow rounded-xl p-6 text-center">
-              <p className="text-gray-500 mb-2">عدد الردود التلقائية</p>
-              <p className="text-3xl font-bold text-green-600">
+            <div className="bg-white border shadow-sm rounded-xl p-6 hover:shadow-md transition text-center">
+              <p className="text-gray-500 text-sm">عدد الردود التلقائية</p>
+              <p className="text-4xl font-extrabold text-green-600 mt-2">
                 {stats.autoRepliesCount}
               </p>
             </div>
 
-            <div className="bg-white shadow rounded-xl p-6 text-center">
-              <p className="text-gray-500 mb-2">الخطة الحالية</p>
-              <p className="text-lg font-semibold text-purple-600">
+            <div className="bg-white border shadow-sm rounded-xl p-6 hover:shadow-md transition text-center">
+              <p className="text-gray-500 text-sm">الخطة الحالية</p>
+
+              <p className="text-2xl font-bold text-purple-600 mt-2">
                 {stats.planName || "غير محددة"}
               </p>
+
               {stats.maxMessages !== null && (
                 <p className="mt-1 text-xs text-gray-400">
                   الحد الأقصى للرسائل: {stats.maxMessages}
                 </p>
               )}
+            </div>
+
+          </div>
+
+          {/* ====== PLACEHOLDER GRAPH / LATER ====== */}
+          <div className="bg-white border shadow-sm rounded-xl p-6">
+            <h3 className="text-lg font-semibold mb-4">إحصائيات الرسائل</h3>
+            <div className="h-56 flex items-center justify-center text-gray-400">
+              سيتم إضافة الرسم البياني هنا 📊
             </div>
           </div>
         </>
