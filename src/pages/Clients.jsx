@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useNavigate } from "react-router-dom";
 
 export default function Clients() {
   const [clients, setClients] = useState([]);
@@ -16,6 +17,7 @@ export default function Clients() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editingClient, setEditingClient] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchInitial();
@@ -372,18 +374,13 @@ export default function Clients() {
                         حذف
                       </button>
                     
-               
-
-
 
                         <button
-    onClick={() => (window.location.href = `/admin/client-users/${c.id}`)}
+    onClick={() => navigate(`/admin/client-users/${c.id}`)}
     className="px-3 py-1 rounded bg-blue-100 text-blue-700 text-xs"
   >
     المستخدمين
   </button>
-
-
                       
                     </td>
 
