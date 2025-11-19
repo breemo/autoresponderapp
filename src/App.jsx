@@ -18,11 +18,16 @@ import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
 import Settings from "./pages/Settings";
-import ClientDashboard from "./pages/ClientDashboard";
 import AdminLayout from "./layouts/AdminLayout";
+
+import ClientLayout from "./layouts/ClientLayout";   // ✅ الجديد
+import ClientDashboard from "./pages/ClientDashboard";
+import ClientMessages from "./pages/ClientMessages";
+import ClientAutoReplies from "./pages/ClientAutoReplies";
+import ClientSettings from "./pages/ClientSettings";
+
 import Plans from "./pages/Plans";
 import ClientUsers from "./pages/ClientUsers"; // حسب مسارك الحالي
-import ClientLayout from "./layouts/ClientLayout";   // ✅ الجديد
 
 // ---------- Auth Context ----------
 const AuthContext = createContext(null);
@@ -136,32 +141,29 @@ export default function App() {
             }
           />
           <Route
-            path="/client/messages"
-            element={
-              <ClientRoute>
-                {/* لو عندك صفحة ClientMessages.jsx استبدلها هنا */}
-                <div>صفحة رسائل العميل (بنشبّكها لاحقاً)</div>
-              </ClientRoute>
-            }
-          />
+  path="/client/messages"
+  element={
+    <ClientRoute>
+      <ClientMessages />
+    </ClientRoute>
+  }
+/>
           <Route
-            path="/client/auto-replies"
-            element={
-              <ClientRoute>
-                {/* ClientAutoReplies */}
-                <div>صفحة الردود التلقائية للعميل</div>
-              </ClientRoute>
-            }
-          />
+  path="/client/auto-replies"
+  element={
+    <ClientRoute>
+      <ClientAutoReplies />
+    </ClientRoute>
+  }
+/>
           <Route
-            path="/client/settings"
-            element={
-              <ClientRoute>
-                {/* ClientSettings */}
-                <div>إعدادات العميل</div>
-              </ClientRoute>
-            }
-          />
+  path="/client/settings"
+  element={
+    <ClientRoute>
+      <ClientSettings />
+    </ClientRoute>
+  }
+/>
         </Routes>
       </Router>
     </AuthContext.Provider>
