@@ -17,17 +17,19 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
+import Plans from "./pages/Plans";
+import ClientUsers from "./pages/ClientUsers"; // حسب مسارك الحالي
 import Settings from "./pages/Settings";
-import AdminLayout from "./layouts/AdminLayout";
 
+import AdminLayout from "./layouts/AdminLayout";
 import ClientLayout from "./layouts/ClientLayout";   // ✅ الجديد
+
 import ClientDashboard from "./pages/ClientDashboard";
 import ClientMessages from "./pages/ClientMessages";
 import ClientAutoReplies from "./pages/ClientAutoReplies";
 import ClientSettings from "./pages/ClientSettings";
 
-import Plans from "./pages/Plans";
-import ClientUsers from "./pages/ClientUsers"; // حسب مسارك الحالي
+
 
 // ---------- Auth Context ----------
 const AuthContext = createContext(null);
