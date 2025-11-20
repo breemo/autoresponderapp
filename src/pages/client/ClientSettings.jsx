@@ -3,209 +3,195 @@ import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../App";
 
 export default function ClientSettings() {
-  const { user, setUser } = useAuth();
-  const [profile, setProfile] = useState({
-    business_name: "",
-    email: "",
-    plan_id: "",
-    is_active: true,
-  });
-  const [password, setPassword] = useState("");
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const { user } = useAuth();
+  const clientId = user?.id;
 
+  const [loading, setLoading] = useState(true);
+  const [availableFeatures, setAvailableFeatures] = useState([]);
+  const [activeIntegrations, setActiveIntegrations] = useState([]);
+
+  // ---------------------
+  // 1) Load data
+  // ---------------------
   useEffect(() => {
-    if (!user) return;
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+    if (!clientId) return;
 
-  async function fetchProfile() {
-    try {
-      setError("");
-      const { data, error: profError } = await supabase
+    async function loadData() {
+      setLoading(true);
+
+      // 1) Get plan_id of client
+      const { data: client } = await supabase
         .from("clients")
-        .select("business_name, email, plan_id, is_active")
-        .eq("id", user.id)
+        .select("plan_id")
+        .eq("id", clientId)
         .single();
 
-      if (profError) throw profError;
-      setProfile(data);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "فشل في تحميل بيانات الحساب");
+      const planId = client?.plan_id;
+
+      // 2) Get features inside the plan
+      const { data: planFeatures } = await supabase
+        .from("plan_features")
+        .select("feature_id, features(*)")
+        .eq("plan_id", planId);
+
+      const featuresList = planFeatures?.map((pf) => pf.features) || [];
+
+      // 3) Get active integrations of client
+      const { data: integrations } = await supabase
+        .from("client_feature_integrations")
+        .select("*")
+        .eq("client_id", clientId);
+
+      // split: active + inactive
+      const active = integrations;
+      const activeFeatureIds = active.map((i) => i.feature_id);
+
+      const available = featuresList.filter(
+        (f) => !activeFeatureIds.includes(f.id)
+      );
+
+      setAvailableFeatures(available);
+      setActiveIntegrations(active);
+      setLoading(false);
     }
+
+    loadData();
+  }, [clientId]);
+
+  // ---------------------
+  // 2) Save Integration
+  // ---------------------
+  async function handleSave(integrationId, values) {
+    await supabase
+      .from("client_feature_integrations")
+      .update({ values })
+      .eq("id", integrationId);
+
+    alert("تم حفظ الإعدادات بنجاح");
   }
 
-  async function saveProfile() {
-    try {
-      setSavingProfile(true);
-      setError("");
-      setMessage("");
+  // ---------------------
+  // 3) Add Integration
+  // ---------------------
+  async function handleAddFeature(feature) {
+    await supabase.from("client_feature_integrations").insert([
+      {
+        client_id: clientId,
+        feature_id: feature.id,
+        name: feature.name,
+        is_active: true,
+        values: {},
+      },
+    ]);
 
-      const { error: updError } = await supabase
-        .from("clients")
-        .update({
-          business_name: profile.business_name,
-          is_active: profile.is_active,
-        })
-        .eq("id", user.id);
-
-      if (updError) throw updError;
-
-      // تحديث الـ user في الذاكرة و localStorage
-      const newUser = { ...user, ...profile };
-      setUser(newUser);
-      localStorage.setItem("user", JSON.stringify(newUser));
-
-      setMessage("تم حفظ بيانات الحساب بنجاح");
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "فشل في حفظ بيانات الحساب");
-    } finally {
-      setSavingProfile(false);
-    }
+    window.location.reload();
   }
 
-  async function changePassword() {
-    if (!password || password.length < 6) {
-      setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
-      return;
-    }
+  // ---------------------
+  // 4) Delete Integration
+  // ---------------------
+  async function handleDelete(integrationId) {
+    await supabase
+      .from("client_feature_integrations")
+      .delete()
+      .eq("id", integrationId);
 
-    try {
-      setSavingPassword(true);
-      setError("");
-      setMessage("");
-
-      const { error: updError } = await supabase
-        .from("clients")
-        .update({ password })
-        .eq("id", user.id);
-
-      if (updError) throw updError;
-
-      setPassword("");
-      setMessage("تم تحديث كلمة المرور بنجاح");
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "فشل في تحديث كلمة المرور");
-    } finally {
-      setSavingPassword(false);
-    }
+    window.location.reload();
   }
+
+  if (loading)
+    return <div className="p-6 text-gray-500">جارِ تحميل الإعدادات...</div>;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-2">إعدادات الحساب</h1>
-      <p className="text-gray-500 mb-6">
-        هنا يمكنك تعديل بيانات حسابك وتحديث كلمة المرور.
-      </p>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">إعدادات التكاملات</h1>
 
-      {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm">
-          {error}
-        </div>
+      {/* ---------------- ACTIVE ---------------- */}
+      <h2 className="text-lg font-semibold mb-3">التكاملات المفعلة</h2>
+
+      {activeIntegrations.length === 0 && (
+        <p className="text-gray-500 mb-6">لا يوجد تكاملات مفعلة حالياً.</p>
       )}
 
-      {message && (
-        <div className="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-700 px-4 py-2 text-sm">
-          {message}
-        </div>
+      {activeIntegrations.map((integration) => {
+        const feature = availableFeatures
+          .concat(activeIntegrations.map((i) => i.feature))
+          .find((f) => f?.id === integration.feature_id);
+
+        const fields = feature?.fields || [];
+
+        return (
+          <div
+            key={integration.id}
+            className="bg-white border rounded-lg p-5 mb-5 shadow-sm"
+          >
+            <h3 className="font-bold text-lg mb-3">{integration.name}</h3>
+
+            {/* dynamic fields */}
+            {fields.map((field) => (
+              <div className="mb-3" key={field.key}>
+                <label className="block text-sm font-medium mb-1">
+                  {field.label}
+                </label>
+
+                <input
+                  type={field.type}
+                  defaultValue={integration.values?.[field.key] || ""}
+                  onChange={(e) => {
+                    integration.values[field.key] = e.target.value;
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+            ))}
+
+            <div className="flex gap-3 mt-3">
+              <button
+                onClick={() => handleSave(integration.id, integration.values)}
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+              >
+                حفظ
+              </button>
+
+              <button
+                onClick={() => handleDelete(integration.id)}
+                className="bg-red-500 text-white px-4 py-2 rounded"
+              >
+                حذف
+              </button>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* ---------------- AVAILABLE ---------------- */}
+      <h2 className="text-lg font-semibold mt-10 mb-3">
+        تكاملات متاحة حسب خطتك
+      </h2>
+
+      {availableFeatures.length === 0 && (
+        <p className="text-gray-500">
+          لا يوجد تكاملات إضافية في خطتك حالياً.
+        </p>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* بيانات الحساب */}
-        <div className="bg-white shadow rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">بيانات الحساب</h2>
-
-          <div className="mb-3">
-            <label className="block text-sm text-gray-600 mb-1">
-              الاسم التجاري
-            </label>
-            <input
-              type="text"
-              className="border rounded-lg px-3 py-2 w-full text-sm"
-              value={profile.business_name || ""}
-              onChange={(e) =>
-                setProfile((p) => ({ ...p, business_name: e.target.value }))
-              }
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="block text-sm text-gray-600 mb-1">
-              البريد الإلكتروني
-            </label>
-            <input
-              type="email"
-              className="border rounded-lg px-3 py-2 w-full text-sm bg-gray-50"
-              value={profile.email || ""}
-              disabled
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="block text-sm text-gray-600 mb-1">
-              الخطة الحالية
-            </label>
-            <input
-              type="text"
-              className="border rounded-lg px-3 py-2 w-full text-sm bg-gray-50"
-              value={profile.plan_id || ""}
-              disabled
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={profile.is_active}
-                onChange={(e) =>
-                  setProfile((p) => ({ ...p, is_active: e.target.checked }))
-                }
-              />
-              <span>الحساب مفعّل</span>
-            </label>
+      {availableFeatures.map((f) => (
+        <div
+          key={f.id}
+          className="bg-gray-100 p-4 border rounded flex justify-between items-center mb-3"
+        >
+          <div>
+            <h3 className="font-semibold">{f.name}</h3>
           </div>
 
           <button
-            onClick={saveProfile}
-            disabled={savingProfile}
-            className="bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white text-sm px-4 py-2 rounded-lg"
+            onClick={() => handleAddFeature(f)}
+            className="bg-green-600 text-white px-4 py-2 rounded"
           >
-            حفظ التعديلات
+            تفعيل التكامل
           </button>
         </div>
-
-        {/* كلمة المرور */}
-        <div className="bg-white shadow rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">تغيير كلمة المرور</h2>
-
-          <div className="mb-4">
-            <label className="block text-sm text-gray-600 mb-1">
-              كلمة مرور جديدة
-            </label>
-            <input
-              type="password"
-              className="border rounded-lg px-3 py-2 w-full text-sm"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <button
-            onClick={changePassword}
-            disabled={savingPassword}
-            className="bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white text-sm px-4 py-2 rounded-lg"
-          >
-            تحديث كلمة المرور
-          </button>
-        </div>
-      </div>
+      ))}
     </div>
   );
 }
