@@ -39,7 +39,6 @@ import ClientIntegrations from "./pages/client/ClientIntegrations.jsx";
 // 🔐 Auth Context
 // --------------------------------------------------
 const AuthContext = createContext(null);
-
 export function useAuth() {
   return useContext(AuthContext);
 }
@@ -60,12 +59,11 @@ function ClientRoute({ children }) {
 }
 
 // --------------------------------------------------
-// 🚀 App Component — Router Structure
+// 🚀 App Component
 // --------------------------------------------------
 export default function App() {
   const [user, setUser] = useState(null);
 
-  // Load saved user
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (stored) {
@@ -82,112 +80,27 @@ export default function App() {
       <Router>
         <Routes>
 
-          {/* -------------------- LOGIN -------------------- */}
+          {/* Login */}
           <Route path="/" element={<Login />} />
 
-          {/* -------------------- ADMIN ROUTES -------------------- */}
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            }
-          />
+          {/* Admin */}
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/clients" element={<AdminRoute><AdminClients /></AdminRoute>} />
+          <Route path="/admin/messages" element={<AdminRoute><AdminMessages /></AdminRoute>} />
+          <Route path="/admin/auto-replies" element={<AdminRoute><AdminAutoReplies /></AdminRoute>} />
+          <Route path="/admin/plans" element={<AdminRoute><AdminPlans /></AdminRoute>} />
+          <Route path="/admin/settings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
 
-          <Route
-            path="/admin/clients"
-            element={
-              <AdminRoute>
-                <AdminClients />
-              </AdminRoute>
-            }
-          />
+          {/* Client */}
+          <Route path="/client" element={<ClientRoute><ClientDashboard /></ClientRoute>} />
+          <Route path="/client/messages" element={<ClientRoute><ClientMessages /></ClientRoute>} />
+          <Route path="/client/auto-replies" element={<ClientRoute><ClientAutoReplies /></ClientRoute>} />
+          <Route path="/client/settings" element={<ClientRoute><ClientSettings /></ClientRoute>} />
+          <Route path="/client/integrations" element={<ClientRoute><ClientIntegrations /></ClientRoute>} />
 
-          <Route
-            path="/admin/messages"
-            element={
-              <AdminRoute>
-                <AdminMessages />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/admin/auto-replies"
-            element={
-              <AdminRoute>
-                <AdminAutoReplies />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/admin/plans"
-            element={
-              <AdminRoute>
-                <AdminPlans />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/admin/settings"
-            element={
-              <AdminRoute>
-                <AdminSettings />
-              </AdminRoute>
-            }
-          />
-
-          {/* -------------------- CLIENT ROUTES -------------------- */}
-          <Route
-            path="/client"
-            element={
-              <ClientRoute>
-                <ClientDashboard />
-              </ClientRoute>
-            }
-          />
-
-          <Route
-            path="/client/messages"
-            element={
-              <ClientRoute>
-                <ClientMessages />
-              </ClientRoute>
-            }
-          />
-
-          <Route
-            path="/client/auto-replies"
-            element={
-              <ClientRoute>
-                <ClientAutoReplies />
-              </ClientRoute>
-            }
-          />
-
-          <Route
-            path="/client/settings"
-            element={
-              <ClientRoute>
-                <ClientSettings />
-              </ClientRoute>
-            }
-          />
-
-          <Route
-            path="/client/integrations"
-            element={
-              <ClientRoute>
-                <ClientIntegrations />
-              </ClientRoute>
-            }
-          />
-
-          {/* أي مسار غلط → ارجعه على صفحة الدخول */}
+          {/* fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
       </Router>
     </AuthContext.Provider>
