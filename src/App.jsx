@@ -12,8 +12,12 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import AdminLayout from "./layouts/AdminLayout.jsx";
+import ClientLayout from "./layouts/ClientLayout.jsx";
+import Login from "./pages/Login.jsx";
+
+
 import Clients from "./pages/Clients";
 import Messages from "./pages/Messages";
 import AutoReplies from "./pages/AutoReplies";
@@ -21,13 +25,52 @@ import Plans from "./pages/Plans";
 import ClientUsers from "./pages/ClientUsers"; // حسب مسارك الحالي
 import Settings from "./pages/Settings";
 
-import AdminLayout from "./layouts/AdminLayout";
-import ClientLayout from "./layouts/ClientLayout";   // ✅ الجديد
+// Admin pages
+import AdminDashboard from "./pages/admin/Dashboard.jsx";
+import AdminClients from "./pages/admin/Clients.jsx";
+import AdminSettings from "./pages/admin/Settings.jsx";
+import AdminPlans from "./pages/admin/Plans.jsx";
+import AdminMessages from "./pages/admin/Messages.jsx";
+import AdminAutoReplies from "./pages/admin/AutoReplies.jsx";
 
-import ClientDashboard from "./pages/ClientDashboard";
-import ClientMessages from "./pages/ClientMessages";
-import ClientAutoReplies from "./pages/ClientAutoReplies";
-import ClientSettings from "./pages/ClientSettings";
+// Client pages
+import ClientDashboard from "./pages/client/ClientDashboard.jsx";
+import ClientMessages from "./pages/client/ClientMessages.jsx";
+import ClientAutoReplies from "./pages/client/ClientAutoReplies.jsx";
+import ClientSettings from "./pages/client/ClientSettings.jsx";
+
+
+const router = createBrowserRouter([
+  { path: "/", element: <Login /> },
+
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "clients", element: <AdminClients /> },
+      { path: "plans", element: <AdminPlans /> },
+      { path: "messages", element: <AdminMessages /> },
+      { path: "auto-replies", element: <AdminAutoReplies /> },
+      { path: "settings", element: <AdminSettings /> },
+    ],
+  },
+
+  {
+    path: "/client",
+    element: <ClientLayout />,
+    children: [
+      { index: true, element: <ClientDashboard /> },
+      { path: "messages", element: <ClientMessages /> },
+      { path: "auto-replies", element: <ClientAutoReplies /> },
+      { path: "settings", element: <ClientSettings /> },
+    ],
+  },
+]);
+
+export default function AppRouter() {
+  return <RouterProvider router={router} />;
+}
 
 
 
