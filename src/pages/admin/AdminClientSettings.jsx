@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import AdminLayout from "../../layouts/AdminLayout";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function AdminClientSettings() {
