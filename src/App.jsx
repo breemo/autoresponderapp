@@ -186,6 +186,8 @@ export default function App() {
             }
           />
 
+          {/* أي مسار غلط → ارجعه على صفحة الدخول */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </AuthContext.Provider>
