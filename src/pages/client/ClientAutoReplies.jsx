@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../App";
 
+const { user } = useAuth();
+const clientId = user?.client_id || user?.id;
+
 export default function ClientAutoReplies() {
-  const { user } = useAuth();
   const [replies, setReplies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,7 +31,7 @@ export default function ClientAutoReplies() {
       const { data, error: replError } = await supabase
         .from("auto_replies")
         .select("id, trigger_text, reply_text, is_active, created_at")
-        .eq("client_id", user.id)
+        .eq("client_id", clientId)
         .order("created_at", { ascending: false });
 
       if (replError) throw replError;
@@ -81,7 +83,7 @@ export default function ClientAutoReplies() {
             is_active: form.is_active,
           })
           .eq("id", form.id)
-          .eq("client_id", user.id);
+          .eq("client_id", clientId);
 
         if (updError) throw updError;
       } else {
@@ -114,7 +116,7 @@ export default function ClientAutoReplies() {
         .from("auto_replies")
         .update({ is_active: !r.is_active })
         .eq("id", r.id)
-        .eq("client_id", user.id);
+        .eq("client_id", clientId);
 
       if (updError) throw updError;
 
@@ -133,7 +135,7 @@ export default function ClientAutoReplies() {
         .from("auto_replies")
         .delete()
         .eq("id", id)
-        .eq("client_id", user.id);
+        .eq("client_id", clientId);
 
       if (delError) throw delError;
 
