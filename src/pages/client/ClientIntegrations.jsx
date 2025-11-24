@@ -21,7 +21,9 @@ export default function ClientIntegrations() {
       .from("clients")
       .select("plan_id")
       .eq("id", clientId)
-      .single();
+
+    setClientIntegrations(data || []);
+
 
     const { data } = await supabase
       .from("plan_features")
