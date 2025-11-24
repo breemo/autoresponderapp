@@ -76,7 +76,7 @@ export default function AdminPlans() {
   };
 
   return (
-    <AdminLayout>
+    <div>
       <h1 className="text-2xl font-bold mb-4">إدارة الباقات</h1>
       <p className="text-gray-500 mb-6">
         أضف، عدّل، واحذف الباقات المتاحة لعملائك.
@@ -164,6 +164,6 @@ export default function AdminPlans() {
           </tbody>
         </table>
       )}
-    </AdminLayout>
+    </div>
   );
 }
