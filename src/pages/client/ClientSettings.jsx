@@ -3,8 +3,9 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../App";
 
+const { user } = useAuth();
+
 export default function ClientSettings() {
-  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState(null);
