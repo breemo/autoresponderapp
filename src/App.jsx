@@ -166,6 +166,8 @@ export default function App() {
     </ClientRoute>
   }
 />
+          <Route path="/client/integrations" element={<ClientLayout><ClientIntegrations /></ClientLayout>} />
+
         </Routes>
       </Router>
     </AuthContext.Provider>
