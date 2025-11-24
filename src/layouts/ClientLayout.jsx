@@ -1,7 +1,7 @@
 // src/layouts/ClientLayout.jsx
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../App";
+import { useAuth } from "../context/AuthContext.jsx";
 
 import {
   HomeIcon,
