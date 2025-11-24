@@ -1,11 +1,14 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
-import { useAuth } from "../App"; // ✅ استدعاء الـ context
+
+import supabase from "../lib/supabaseClient";   // ✅ تصحيح الاستدعاء
+import { useAuth } from "../App";               // ⚠ مؤقتًا صحيح، لكن سنعدله لاحقًا
 
 export default function Login() {
   const navigate = useNavigate();
-  const { setUser } = useAuth(); // ✅ ربط setUser من الـ Context
+  const { setUser } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -26,9 +29,13 @@ export default function Login() {
     }
 
     localStorage.setItem("user", JSON.stringify(user));
-    setUser(user); // ✅ تحديث السياق مباشرة
+    setUser(user);
 
-    setMessage(`✅ مرحبًا ${user.role === "admin" ? "بالمدير" : "بالعميل"}!`);
+    setMessage(
+      `مرحبا ${
+        user.role === "admin" ? "بالمدير" : "بالعميل"
+      }، سيتم تحويلك الآن`
+    );
 
     setTimeout(() => {
       navigate(user.role === "admin" ? "/admin" : "/client");
@@ -36,17 +43,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <form
         onSubmit={handleLogin}
-        className="bg-white shadow-md rounded-lg px-8 py-6 w-96 border border-gray-100"
+        className="bg-white shadow-md rounded-lg px-8 py-6 w-96"
       >
         <h2 className="text-2xl font-bold mb-4 text-center text-blue-600">
-          Auto Responder Login
+          AutoResponder Login
         </h2>
 
         {message && (
-          <p className="text-center mb-3 text-green-600 font-medium">
+          <p className="text-center mb-3 text-red-600 font-medium">
             {message}
           </p>
         )}
@@ -56,7 +63,7 @@ export default function Login() {
           placeholder="البريد الإلكتروني"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded"
           required
         />
 
@@ -65,13 +72,13 @@ export default function Login() {
           placeholder="كلمة المرور"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-4 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full mb-4 px-3 py-2 border border-gray-300 rounded"
           required
         />
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-all"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
           تسجيل الدخول
         </button>
