@@ -1,5 +1,3 @@
-import AdminLayout from "../../layouts/AdminLayout";
-
 export default function AdminMessages() {
   return (
     <div>
