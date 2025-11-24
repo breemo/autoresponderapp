@@ -226,12 +226,12 @@ export default function ClientSettings() {
               <div className="space-y-4">
                 {activeIntegrations.map((intg) => {
                   const feature = getFeatureById(intg.feature_id);
-                  const fields = (feature?.fields || []) as any;
+                  const fields = feature?.fields || [];
 
                   return (
                     <div
                       key={intg.id}
-                      className="border border-gray-200 rounded-lg p-4"
+                      className="mb-6 border rounded-lg p-4 bg-white shadow-sm"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div>
