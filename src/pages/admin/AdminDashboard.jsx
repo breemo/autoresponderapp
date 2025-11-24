@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../App";
-import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../../App";
+import { supabase } from "../../lib/supabaseClient";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
