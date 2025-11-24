@@ -110,7 +110,7 @@ export default function AdminClients() {
   };
 
   return (
-    <AdminLayout>
+    <div>
       <h1 className="text-2xl font-bold mb-4">إدارة العملاء</h1>
       <p className="text-gray-500 mb-6">
         يمكنك إضافة عميل جديد، تفعيل/تعطيل، أو تعديل إعداداته.
@@ -227,6 +227,6 @@ export default function AdminClients() {
           </tbody>
         </table>
       )}
-    </AdminLayout>
+    </div>
   );
 }
