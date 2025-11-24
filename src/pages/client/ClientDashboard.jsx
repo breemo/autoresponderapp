@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../App";
 
+const { user } = useAuth();
+const clientId = user?.client_id || user?.id;
+
+
 export default function ClientDashboard() {
-  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -27,7 +30,7 @@ export default function ClientDashboard() {
         const { data: messages, error: msgError } = await supabase
           .from("messages")
           .select("id, text, direction, status, created_at")
-          .eq("client_id", user.id)
+          .eq("client_id", clientId)
           .order("created_at", { ascending: false });
 
         if (msgError) throw msgError;
@@ -43,7 +46,7 @@ export default function ClientDashboard() {
         const { data: replies, error: replError } = await supabase
           .from("auto_replies")
           .select("id, is_active")
-          .eq("client_id", user.id);
+          .eq("client_id", clientId);
 
         if (replError) throw replError;
 
