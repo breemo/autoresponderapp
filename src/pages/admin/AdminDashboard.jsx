@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../../App";
 import { useAuth } from "../../context/AuthContext.jsx";
 
 import { supabase } from "../../lib/supabaseClient";
