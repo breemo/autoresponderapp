@@ -1,7 +1,7 @@
 // src/layouts/AdminLayout.jsx
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../App";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function AdminLayout({ children }) {
   const navigate = useNavigate();
