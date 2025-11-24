@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import { useAuth } from "../../App";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const { user } = useAuth();
 const clientId = user?.client_id || user?.id;
