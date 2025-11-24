@@ -128,7 +128,7 @@ export default function AdminClientSettings() {
   };
 
   return (
-    <AdminLayout>
+    <div>
       {loading ? (
         <p>جارِ تحميل بيانات العميل...</p>
       ) : !client ? (
@@ -204,6 +204,6 @@ export default function AdminClientSettings() {
           </form>
         </div>
       )}
-    </AdminLayout>
+    </div>
   );
 }
