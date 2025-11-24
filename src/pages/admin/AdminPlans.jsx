@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
-import AdminLayout from "../../layouts/AdminLayout";
 
 export default function AdminPlans() {
   const [plans, setPlans] = useState([]);
