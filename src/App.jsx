@@ -1,6 +1,7 @@
 // src/App.jsx
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext.jsx";
 
 import { AuthContext } from "./context/AuthContext.jsx";
 
@@ -54,7 +55,7 @@ export default function App() {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser }}>
+    <AuthProvider>
       <Router>
         <Routes>
           {/* LOGIN */}
@@ -77,6 +78,6 @@ export default function App() {
 
         </Routes>
       </Router>
-    </AuthContext.Provider>
+    </AuthProvider>
   );
 }
