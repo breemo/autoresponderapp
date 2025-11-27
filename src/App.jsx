@@ -1,6 +1,11 @@
 // src/App.jsx
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 
@@ -26,7 +31,7 @@ import ClientAutoReplies from "./pages/client/ClientAutoReplies.jsx";
 import ClientSettings from "./pages/client/ClientSettings.jsx";
 import ClientIntegrations from "./pages/client/ClientIntegrations.jsx";
 
-// ------------------ Route Guards ------------------
+// ------------------ Guards ------------------
 function AdminRoute({ children }) {
   const { user } = useAuth();
   if (!user || user.role !== "admin") return <Navigate to="/" replace />;
@@ -39,7 +44,7 @@ function ClientRoute({ children }) {
   return <ClientLayout>{children}</ClientLayout>;
 }
 
-// ------------------ Main App ------------------
+// ------------------ APP ------------------
 export default function App() {
   return (
     <AuthProvider>
@@ -57,7 +62,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/clients"
             element={
@@ -66,7 +70,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/messages"
             element={
@@ -75,7 +78,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/auto-replies"
             element={
@@ -84,7 +86,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/plans"
             element={
@@ -93,7 +94,6 @@ export default function App() {
               </AdminRoute>
             }
           />
-
           <Route
             path="/admin/settings"
             element={
@@ -112,7 +112,6 @@ export default function App() {
               </ClientRoute>
             }
           />
-
           <Route
             path="/client/messages"
             element={
@@ -121,7 +120,6 @@ export default function App() {
               </ClientRoute>
             }
           />
-
           <Route
             path="/client/auto-replies"
             element={
@@ -130,7 +128,6 @@ export default function App() {
               </ClientRoute>
             }
           />
-
           <Route
             path="/client/settings"
             element={
@@ -139,7 +136,6 @@ export default function App() {
               </ClientRoute>
             }
           />
-
           <Route
             path="/client/integrations"
             element={
