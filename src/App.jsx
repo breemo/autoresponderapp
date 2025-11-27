@@ -7,7 +7,7 @@ import {
   Navigate,
 } from "react-router-dom";
 
-import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Layouts
 import AdminLayout from "./layouts/AdminLayout.jsx";
