@@ -31,119 +31,62 @@ import ClientAutoReplies from "./pages/client/ClientAutoReplies.jsx";
 import ClientSettings from "./pages/client/ClientSettings.jsx";
 import ClientIntegrations from "./pages/client/ClientIntegrations.jsx";
 
-// ------------------ Guards ------------------
+// ------------------ Route Guards ------------------
 function AdminRoute({ children }) {
   const { user } = useAuth();
   if (!user || user.role !== "admin") return <Navigate to="/" replace />;
-  return <AdminLayout>{children}</AdminLayout>;
+  return children;
 }
 
 function ClientRoute({ children }) {
   const { user } = useAuth();
   if (!user || user.role !== "client") return <Navigate to="/" replace />;
-  return <ClientLayout>{children}</ClientLayout>;
+  return children;
 }
 
-// ------------------ APP ------------------
+// ------------------ MAIN APP ------------------
 export default function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
+
           {/* Login */}
           <Route path="/" element={<Login />} />
 
-          {/* Admin */}
+          {/* Admin ROUTES wrapped inside layout */}
           <Route
             path="/admin"
             element={
               <AdminRoute>
-                <AdminDashboard />
+                <AdminLayout />
               </AdminRoute>
             }
-          />
-          <Route
-            path="/admin/clients"
-            element={
-              <AdminRoute>
-                <AdminClients />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/messages"
-            element={
-              <AdminRoute>
-                <AdminMessages />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/auto-replies"
-            element={
-              <AdminRoute>
-                <AdminAutoReplies />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/plans"
-            element={
-              <AdminRoute>
-                <AdminPlans />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/settings"
-            element={
-              <AdminRoute>
-                <AdminSettings />
-              </AdminRoute>
-            }
-          />
+          >
+            <Route index element={<AdminDashboard />} />
+            <Route path="clients" element={<AdminClients />} />
+            <Route path="plans" element={<AdminPlans />} />
+            <Route path="messages" element={<AdminMessages />} />
+            <Route path="auto-replies" element={<AdminAutoReplies />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
 
-          {/* Client */}
+          {/* Client ROUTES wrapped inside layout */}
           <Route
             path="/client"
             element={
               <ClientRoute>
-                <ClientDashboard />
+                <ClientLayout />
               </ClientRoute>
             }
-          />
-          <Route
-            path="/client/messages"
-            element={
-              <ClientRoute>
-                <ClientMessages />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/client/auto-replies"
-            element={
-              <ClientRoute>
-                <ClientAutoReplies />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/client/settings"
-            element={
-              <ClientRoute>
-                <ClientSettings />
-              </ClientRoute>
-            }
-          />
-          <Route
-            path="/client/integrations"
-            element={
-              <ClientRoute>
-                <ClientIntegrations />
-              </ClientRoute>
-            }
-          />
+          >
+            <Route index element={<ClientDashboard />} />
+            <Route path="messages" element={<ClientMessages />} />
+            <Route path="auto-replies" element={<ClientAutoReplies />} />
+            <Route path="settings" element={<ClientSettings />} />
+            <Route path="integrations" element={<ClientIntegrations />} />
+          </Route>
+
         </Routes>
       </Router>
     </AuthProvider>
