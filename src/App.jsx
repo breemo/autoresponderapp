@@ -50,19 +50,19 @@ export default function App() {
           <Route path="/" element={<Login />} />
 
           {/* Admin */}
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin" element={<AdminRoute><AdminClients /></AdminRoute>} />
-          <Route path="/admin" element={<AdminRoute><AdminMessages /></AdminRoute>} />
-          <Route path="/admin" element={<AdminRoute><AdminAutoReplies /></AdminRoute>} />
-          <Route path="/admin" element={<AdminRoute><AdminPlans /></AdminRoute>} />
-          <Route path="/admin" element={<AdminRoute><AdminSettings /></AdminRoute>} />
+          <Route path="AdminDashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="AdminClients" element={<AdminRoute><AdminClients /></AdminRoute>} />
+          <Route path="AdminMessages" element={<AdminRoute><AdminMessages /></AdminRoute>} />
+          <Route path="AdminAutoReplies" element={<AdminRoute><AdminAutoReplies /></AdminRoute>} />
+          <Route path="AdminPlans" element={<AdminRoute><AdminPlans /></AdminRoute>} />
+          <Route path="AdminSettings" element={<AdminRoute><AdminSettings /></AdminRoute>} />
 
           {/* Client */}
-          <Route path="/client" element={<ClientRoute><ClientDashboard /></ClientRoute>} />
-          <Route path="/client" element={<ClientRoute><ClientMessages /></ClientRoute>} />
-          <Route path="/client" element={<ClientRoute><ClientAutoReplies /></ClientRoute>} />
-          <Route path="/client" element={<ClientRoute><ClientSettings /></ClientRoute>} />
-          <Route path="/client" element={<ClientRoute><ClientIntegrations /></ClientRoute>} />
+          <Route path="ClientDashboard" element={<ClientRoute><ClientDashboard /></ClientRoute>} />
+          <Route path="ClientMessages" element={<ClientRoute><ClientMessages /></ClientRoute>} />
+          <Route path="ClientAutoReplies" element={<ClientRoute><ClientAutoReplies /></ClientRoute>} />
+          <Route path="ClientSettings" element={<ClientRoute><ClientSettings /></ClientRoute>} />
+          <Route path="ClientIntegrations" element={<ClientRoute><ClientIntegrations /></ClientRoute>} />
 
         </Routes>
       </Router>
