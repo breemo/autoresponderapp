@@ -27,7 +27,7 @@ export default function AdminClients() {
 
     const { data: clientsData, error } = await supabase
       .from("clients")
-      .select("id, business_name, email, plan_id, role, created_at")
+      .select("id, business_name, email, plan_id, created_at")
      /* .order("created_at", { ascending: false }); */
 
     if (error) {
