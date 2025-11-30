@@ -96,24 +96,11 @@ export default function AdminClients() {
   async function toggleStatus(id, currentStatus) {
   console.log("ID sent to Supabase:", id);
 
-  /*const { data, error } = await supabase
+  const { data, error } = await supabase
     .from("clients")
     .update({ is_active: !currentStatus })
     .eq("id", id);
 
-  console.log("Supabase error:", error);
-  console.log("Supabase data:", data);
-*/
-
-  const { data: testRow, error: testError } = await supabase
-  .from("clients")
-  .select("*")
-  .eq("id", id);
-
-console.log("TEST SELECT row:", testRow);
-console.log("TEST SELECT error:", testError);
-
-    
   if (error) {
     console.error(error);
     setMsg("❌ فشل في تحديث حالة العميل");
@@ -121,7 +108,15 @@ console.log("TEST SELECT error:", testError);
   }
 
   setMsg("✔️ تم تحديث حالة العميل بنجاح");
+
+  // تحديث الواجهة مباشرة
+  setClients(prev =>
+    prev.map(c =>
+      c.id === id ? { ...c, is_active: !currentStatus } : c
+    )
+  );
 }
+
 
 
 
@@ -231,11 +226,12 @@ console.log("TEST SELECT error:", testError);
                 <td className="p-3">{c.email}</td>
                 <td className="p-3">{getPlanName(c.plan_id)}</td>
                 <td className="p-3">
-                  {c.role === "disabled" ? (
-                    <span className="text-red-500 font-semibold">معطّل</span>
-                  ) : (
-                    <span className="text-green-600 font-semibold">مفعّل</span>
-                  )}
+                  {c.is_active ? (
+                      <span className="text-green-600 font-semibold">مفعّل</span>
+                    ) : (
+                      <span className="text-red-500 font-semibold">معطّل</span>
+                    )}
+
                 </td>
                 <td className="p-3 text-center">
                   <Link
@@ -247,10 +243,10 @@ console.log("TEST SELECT error:", testError);
                 </td>
                 <td className="p-3 text-center space-x-2 space-x-reverse">
                   <button
-                    onClick={() => toggleStatus(c.id, c.role)}
+                    onClick={() => toggleStatus(c.id, c.is_active)}
                     className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mx-1"
                   >
-                    {c.role === "disabled" ? "تفعيل" : "تعطيل"}
+                    {c.is_active ? "تعطيل" : "تفعيل"}
                   </button>
                   <button
                     onClick={() => deleteClient(c.id)}
