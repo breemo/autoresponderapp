@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-const { user } = useAuth();
-const clientId = user?.client_id || user?.id;
+
 
 export default function ClientAutoReplies() {
-  const [replies, setReplies] = useState([]);
+  const { user } = useAuth();
+  const clientId = user?.client_id || user?.id;const [replies, setReplies] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
