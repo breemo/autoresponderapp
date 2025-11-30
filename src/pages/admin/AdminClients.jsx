@@ -92,11 +92,17 @@ export default function AdminClients() {
     }
   };
 */
+
   async function toggleStatus(id, currentStatus) {
+  console.log("ID sent to Supabase:", id);
+
   const { data, error } = await supabase
     .from("clients")
     .update({ is_active: !currentStatus })
     .eq("id", id);
+
+  console.log("Supabase error:", error);
+  console.log("Supabase data:", data);
 
   if (error) {
     console.error(error);
@@ -105,14 +111,8 @@ export default function AdminClients() {
   }
 
   setMsg("✔️ تم تحديث حالة العميل بنجاح");
-
-  // تحديث البيانات في الواجهة
-  setClients(prev =>
-    prev.map(c =>
-      c.id === id ? { ...c, is_active: !currentStatus } : c
-    )
-  );
 }
+
 
 
   
