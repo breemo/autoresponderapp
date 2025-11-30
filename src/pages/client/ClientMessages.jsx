@@ -2,16 +2,18 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-const { user } = useAuth();
-const clientId = user?.client_id || user?.id;
+
 
 export default function ClientMessages() {
+  const { user } = useAuth();
+  const clientId = user?.client_id || user?.id;
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [directionFilter, setDirectionFilter] = useState("all");
 
+  
   useEffect(() => {
     if (!user) return;
     fetchMessages();
