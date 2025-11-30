@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 export default function AdminClients() {
+  const { id: clientId } = useParams();
+
   const [clients, setClients] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,7 +74,7 @@ export default function AdminClients() {
       fetchData();
     }
   };
-
+/*
   const toggleStatus = async (id, currentRole) => {
     const newRole = currentRole === "disabled" ? "client" : "disabled";
 
@@ -88,6 +91,31 @@ export default function AdminClients() {
       fetchData();
     }
   };
+*/
+  async function toggleStatus(id, currentStatus) {
+  const { data, error } = await supabase
+    .from("clients")
+    .update({ is_active: !currentStatus })
+    .eq("id", id);
+
+  if (error) {
+    console.error(error);
+    setMsg("❌ فشل في تحديث حالة العميل");
+    return;
+  }
+
+  setMsg("✔️ تم تحديث حالة العميل بنجاح");
+
+  // تحديث البيانات في الواجهة
+  setClients(prev =>
+    prev.map(c =>
+      c.id === id ? { ...c, is_active: !currentStatus } : c
+    )
+  );
+}
+
+
+  
 
   const deleteClient = async (id) => {
     if (!window.confirm("هل أنت متأكد من حذف هذا العميل؟")) return;
