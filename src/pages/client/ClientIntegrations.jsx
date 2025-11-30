@@ -9,7 +9,7 @@ export default function ClientIntegrations() {
   const [features, setFeatures] = useState([]);
   const [clientIntegrations, setClientIntegrations] = useState([]);
 
-  const clientId = JSON.parse(localStorage.getItem("user"))?.id;
+  /* const clientId = JSON.parse(localStorage.getItem("user"))?.id; */
 
   useEffect(() => {
     loadFeatures();
