@@ -2,29 +2,29 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import { useAuth } from "./context/AuthContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 // Layouts
-import AdminLayout from "./layouts/AdminLayout.jsx";
-import ClientLayout from "./layouts/ClientLayout.jsx";
+import AdminLayout from "../layouts/AdminLayout.jsx";
+import ClientLayout from "../layouts/ClientLayout.jsx";
 
 // Login
-import Login from "./pages/Login.jsx";
+import Login from "../pages/Login.jsx";
 
 // Admin pages
-import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
-import AdminClients from "./pages/admin/AdminClients.jsx";
-import AdminPlans from "./pages/admin/AdminPlans.jsx";
-import AdminMessages from "./pages/admin/AdminMessages.jsx";
-import AdminAutoReplies from "./pages/admin/AdminAutoReplies.jsx";
-import AdminSettings from "./pages/admin/AdminSettings.jsx";
+import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
+import AdminClients from "../pages/admin/AdminClients.jsx";
+import AdminPlans from "../pages/admin/AdminPlans.jsx";
+import AdminMessages from "../pages/admin/AdminMessages.jsx";
+import AdminAutoReplies from "../pages/admin/AdminAutoReplies.jsx";
+import AdminSettings from "../pages/admin/AdminSettings.jsx";
 
 // Client pages
-import ClientDashboard from "./pages/client/ClientDashboard.jsx";
-import ClientMessages from "./pages/client/ClientMessages.jsx";
-import ClientAutoReplies from "./pages/client/ClientAutoReplies.jsx";
-import ClientSettings from "./pages/client/ClientSettings.jsx";
-import ClientIntegrations from "./pages/client/ClientIntegrations.jsx";
+import ClientDashboard from "../pages/client/ClientDashboard.jsx";
+import ClientMessages from "../pages/client/ClientMessages.jsx";
+import ClientAutoReplies from "../pages/client/ClientAutoReplies.jsx";
+import ClientSettings from "../pages/client/ClientSettings.jsx";
+import ClientIntegrations from "../pages/client/ClientIntegrations.jsx";
 
 // ----------- Route Guards -------------
 function AdminRoute({ children }) {
