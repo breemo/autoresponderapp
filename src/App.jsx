@@ -43,7 +43,6 @@ function ClientRoute({ children }) {
 // ----------- التطبيق الرئيسي -------------
 export default function App() {
   return (
-    <AuthProvider>   {/* ←← أهم سطر! لازم يغلّف Router */}
       <Router>
         <Routes>
 
@@ -109,6 +108,5 @@ export default function App() {
 
         </Routes>
       </Router>
-    </AuthProvider>
   );
 }
