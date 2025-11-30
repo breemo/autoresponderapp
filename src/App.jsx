@@ -51,49 +51,49 @@ export default function App() {
 
           {/* Admin */}
           <Route
-            path="/admin"
+            path="/pages/admin"
             element={<AdminRoute><AdminDashboard /></AdminRoute>}
           />
           <Route
-            path="/admin/clients"
+            path="/pages/admin/clients"
             element={<AdminRoute><AdminClients /></AdminRoute>}
           />
           <Route
-            path="/admin/messages"
+            path="/pages/admin/messages"
             element={<AdminRoute><AdminMessages /></AdminRoute>}
           />
           <Route
-            path="/admin/auto-replies"
+            path="/pages/admin/auto-replies"
             element={<AdminRoute><AdminAutoReplies /></AdminRoute>}
           />
           <Route
-            path="/admin/plans"
+            path="/pages/admin/plans"
             element={<AdminRoute><AdminPlans /></AdminRoute>}
           />
           <Route
-            path="/admin/settings"
+            path="/pages/admin/settings"
             element={<AdminRoute><AdminSettings /></AdminRoute>}
           />
 
           {/* Client */}
           <Route
-            path="/client"
+            path="/pages/client"
             element={<ClientRoute><ClientDashboard /></ClientRoute>}
           />
           <Route
-            path="/client/messages"
+            path="/pages/client/messages"
             element={<ClientRoute><ClientMessages /></ClientRoute>}
           />
           <Route
-            path="/client/auto-replies"
+            path="/pages/client/auto-replies"
             element={<ClientRoute><ClientAutoReplies /></ClientRoute>}
           />
           <Route
-            path="/client/settings"
+            path="/pages/client/settings"
             element={<ClientRoute><ClientSettings /></ClientRoute>}
           />
           <Route
-            path="/client/integrations"
+            path="/pages/client/integrations"
             element={<ClientRoute><ClientIntegrations /></ClientRoute>}
           />
 
