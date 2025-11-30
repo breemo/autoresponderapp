@@ -96,14 +96,24 @@ export default function AdminClients() {
   async function toggleStatus(id, currentStatus) {
   console.log("ID sent to Supabase:", id);
 
-  const { data, error } = await supabase
+  /*const { data, error } = await supabase
     .from("clients")
     .update({ is_active: !currentStatus })
     .eq("id", id);
 
   console.log("Supabase error:", error);
   console.log("Supabase data:", data);
+*/
 
+  const { data: testRow, error: testError } = await supabase
+  .from("clients")
+  .select("*")
+  .eq("id", id);
+
+console.log("TEST SELECT row:", testRow);
+console.log("TEST SELECT error:", testError);
+
+    
   if (error) {
     console.error(error);
     setMsg("❌ فشل في تحديث حالة العميل");
