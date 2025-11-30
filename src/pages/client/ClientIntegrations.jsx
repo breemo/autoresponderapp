@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
-const { user } = useAuth();
-const clientId = user?.client_id || user?.id;
+
 
 export default function ClientIntegrations() {
+  const { user } = useAuth();
+  const clientId = user?.client_id || user?.id;
   const [features, setFeatures] = useState([]);
   const [clientIntegrations, setClientIntegrations] = useState([]);
 
