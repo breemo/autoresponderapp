@@ -22,7 +22,7 @@ import AdminSettings from "./pages/admin/AdminSettings.jsx";
 // Client pages
 import ClientDashboard from "./pages/client/ClientDashboard.jsx";
 import ClientMessages from "./pages/client/ClientMessages.jsx";
-import ClientAutoReplies from "../pages/client/ClientAutoReplies.jsx";
+import ClientAutoReplies from "./pages/client/ClientAutoReplies.jsx";
 import ClientSettings from "./pages/client/ClientSettings.jsx";
 import ClientIntegrations from "./pages/client/ClientIntegrations.jsx";
 
