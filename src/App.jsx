@@ -55,45 +55,45 @@ export default function App() {
             element={<AdminRoute><AdminDashboard /></AdminRoute>}
           />
           <Route
-            path="/pages/admin/clients"
+            path="/admin/clients"
             element={<AdminRoute><AdminClients /></AdminRoute>}
           />
           <Route
-            path="/pages/admin/messages"
+            path="/admin/messages"
             element={<AdminRoute><AdminMessages /></AdminRoute>}
           />
           <Route
-            path="/pages/admin/auto-replies"
+            path="/admin/auto-replies"
             element={<AdminRoute><AdminAutoReplies /></AdminRoute>}
           />
           <Route
-            path="/pages/admin/plans"
+            path="/admin/plans"
             element={<AdminRoute><AdminPlans /></AdminRoute>}
           />
           <Route
-            path="/pages/admin/settings"
+            path="/admin/settings"
             element={<AdminRoute><AdminSettings /></AdminRoute>}
           />
 
           {/* Client */}
           <Route
-            path="/pages/client"
+            path="/client"
             element={<ClientRoute><ClientDashboard /></ClientRoute>}
           />
           <Route
-            path="/pages/client/messages"
+            path="/client/messages"
             element={<ClientRoute><ClientMessages /></ClientRoute>}
           />
           <Route
-            path="/pages/client/auto-replies"
+            path="/client/auto-replies"
             element={<ClientRoute><ClientAutoReplies /></ClientRoute>}
           />
           <Route
-            path="/pages/client/settings"
+            path="/client/settings"
             element={<ClientRoute><ClientSettings /></ClientRoute>}
           />
           <Route
-            path="/pages/client/integrations"
+            path="/client/integrations"
             element={<ClientRoute><ClientIntegrations /></ClientRoute>}
           />
 
