@@ -3,24 +3,26 @@ import { supabase } from "../../lib/supabaseClient";
 import { useParams } from "react-router-dom";
 
 export default function AdminPlanFeatures() {
+  const { planId } = useParams(); // ← هنا أولاً
+
   const [plans, setPlans] = useState([]);
   const [features, setFeatures] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(planId || "");
-
   const [planFeatures, setPlanFeatures] = useState([]);
   const [msg, setMsg] = useState("");
-const { planId } = useParams();
 
+  // لو فتح الصفحة على رابط فيه planId
   useEffect(() => {
-  if (planId) setSelectedPlan(planId);
-}, [planId]);
+    if (planId) setSelectedPlan(planId);
+  }, [planId]);
 
-  
+  // تحميل الباقات والميزات
   useEffect(() => {
     fetchPlans();
     fetchFeatures();
   }, []);
 
+  // تحميل ميزات الباقة المحددة
   useEffect(() => {
     if (selectedPlan) fetchPlanFeatures(selectedPlan);
   }, [selectedPlan]);
@@ -35,11 +37,11 @@ const { planId } = useParams();
     if (!error) setFeatures(data || []);
   };
 
-  const fetchPlanFeatures = async (planId) => {
+  const fetchPlanFeatures = async (id) => {
     const { data, error } = await supabase
       .from("plan_features")
       .select("feature_id")
-      .eq("plan_id", planId);
+      .eq("plan_id", id);
 
     if (!error) {
       setPlanFeatures(data.map((x) => x.feature_id));
@@ -50,7 +52,7 @@ const { planId } = useParams();
     setMsg("");
 
     if (enabled) {
-      // إضافة
+      // إضافة الميزة للباقة
       const { error } = await supabase.from("plan_features").insert([
         { plan_id: selectedPlan, feature_id: featureId },
       ]);
@@ -58,7 +60,7 @@ const { planId } = useParams();
       if (error) setMsg("❌ حدث خطأ أثناء الإضافة");
       else setPlanFeatures((prev) => [...prev, featureId]);
     } else {
-      // حذف
+      // حذف الميزة من الباقة
       const { error } = await supabase
         .from("plan_features")
         .delete()
@@ -96,7 +98,7 @@ const { planId } = useParams();
         </select>
       </div>
 
-      {/* عرض المميزات */}
+      {/* عرض الميزات */}
       {selectedPlan && (
         <div className="bg-white shadow rounded p-4">
           <h2 className="text-xl font-semibold mb-4">المميزات المتاحة</h2>
