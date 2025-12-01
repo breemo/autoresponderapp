@@ -1,7 +1,6 @@
 // src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 
 // Layouts
@@ -18,6 +17,7 @@ import AdminPlans from "./pages/admin/AdminPlans.jsx";
 import AdminMessages from "./pages/admin/AdminMessages.jsx";
 import AdminAutoReplies from "./pages/admin/AdminAutoReplies.jsx";
 import AdminSettings from "./pages/admin/AdminSettings.jsx";
+import AdminClientSettings from "./pages/admin/AdminClientSettings.jsx";
 
 // Client pages
 import ClientDashboard from "./pages/client/ClientDashboard.jsx";
@@ -73,6 +73,10 @@ export default function App() {
           <Route
             path="/admin/settings"
             element={<AdminRoute><AdminSettings /></AdminRoute>}
+          />
+          <Route
+            path="/admin/client/:id"
+            element={<AdminRoute><AdminClientSettings /></AdminRoute>}
           />
 
           {/* Client */}
