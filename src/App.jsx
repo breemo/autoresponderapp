@@ -18,6 +18,7 @@ import AdminMessages from "./pages/admin/AdminMessages.jsx";
 import AdminAutoReplies from "./pages/admin/AdminAutoReplies.jsx";
 import AdminSettings from "./pages/admin/AdminSettings.jsx";
 import AdminClientSettings from "./pages/admin/AdminClientSettings.jsx";
+import AdminFeatures from "./pages/admin/AdminFeatures.jsx";
 
 // Client pages
 import ClientDashboard from "./pages/client/ClientDashboard.jsx";
@@ -78,7 +79,14 @@ export default function App() {
             path="/admin/client/:id"
             element={<AdminRoute><AdminClientSettings /></AdminRoute>}
           />
-
+          <Route
+            path="/admin/features"
+            element={
+              <AdminRoute>
+                <AdminFeatures />
+              </AdminRoute>
+            }
+          />
           {/* Client */}
           <Route
             path="/client"
