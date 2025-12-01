@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
+import { useParams } from "react-router-dom";
 
 export default function AdminPlanFeatures() {
   const [plans, setPlans] = useState([]);
   const [features, setFeatures] = useState([]);
-  const [selectedPlan, setSelectedPlan] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState(planId || "");
+
   const [planFeatures, setPlanFeatures] = useState([]);
   const [msg, setMsg] = useState("");
+const { planId } = useParams();
 
+  useEffect(() => {
+  if (planId) setSelectedPlan(planId);
+}, [planId]);
+
+  
   useEffect(() => {
     fetchPlans();
     fetchFeatures();
