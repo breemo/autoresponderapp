@@ -84,7 +84,7 @@ export default function App() {
             element={<AdminRoute><AdminClientSettings /></AdminRoute>}
           />
 <Route
-  path="/admin/plan-features"
+  path="/admin/plan-features/:planId"
   element={<AdminRoute><AdminPlanFeatures /></AdminRoute>}
 />
           {/* Client */}
