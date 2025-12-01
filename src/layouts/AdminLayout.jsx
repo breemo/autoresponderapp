@@ -61,7 +61,19 @@ export default function AdminLayout({ children }) {
                 📦 <span>الباقات</span>
               </Link>
             </li>
-
+            <li>
+              <Link
+                to="/admin/features"
+                className={`block px-4 py-2 rounded ${
+                  location.pathname.startsWith("/admin/features")
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                إدارة الميزات
+              </Link>
+            
+            </li>
             <li>
               <Link to="/admin/settings" className={`flex items-center gap-3 px-6 py-3 text-sm font-medium transition ${isActive("/admin/settings")}`}>
                 ⚙️ <span>الإعدادات</span>
