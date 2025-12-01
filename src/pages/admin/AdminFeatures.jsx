@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 
 export default function AdminFeatures() {
-    const [features, setFeatures] = useState([]);
+  const [features, setFeatures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
 
@@ -66,14 +66,21 @@ export default function AdminFeatures() {
 
   const startEdit = (f) => {
     setEditingId(f.id);
+
+    let parsedFields = [];
+
+    if (f.fields && typeof f.fields === "object" && !Array.isArray(f.fields)) {
+      parsedFields = Object.entries(f.fields).map(([name, type]) => ({
+        name,
+        type,
+      }));
+    }
+
     setForm({
       name: f.name,
       slug: f.slug,
       description: f.description || "",
-      fields: Object.entries(f.fields || {}).map(([name, type]) => ({
-        name,
-        type,
-      })),
+      fields: parsedFields,
     });
   };
 
@@ -142,6 +149,18 @@ export default function AdminFeatures() {
     }
   };
 
+  const renderFieldsList = (fields) => {
+    if (!fields || typeof fields !== "object" || Array.isArray(fields)) {
+      return "-";
+    }
+
+    return Object.entries(fields).map(([k, v]) => (
+      <div key={k}>
+        {k} ({v})
+      </div>
+    ));
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">إدارة المميزات (Features)</h1>
@@ -151,7 +170,6 @@ export default function AdminFeatures() {
 
       {msg && <p className="mb-4 text-blue-700 font-semibold">{msg}</p>}
 
-      {/* Form */}
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow rounded-xl p-4 mb-8 flex flex-col gap-4"
@@ -161,7 +179,6 @@ export default function AdminFeatures() {
             <label className="block text-sm mb-1">اسم الميزة</label>
             <input
               type="text"
-              name="name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="border rounded px-3 py-2 w-60"
@@ -172,7 +189,6 @@ export default function AdminFeatures() {
             <label className="block text-sm mb-1">Slug</label>
             <input
               type="text"
-              name="slug"
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
               className="border rounded px-3 py-2 w-40"
@@ -193,7 +209,7 @@ export default function AdminFeatures() {
         </div>
 
         <div>
-          <label className="font-semibold">الحقول المطلوبة لهذه الميزة:</label>
+          <label className="font-semibold">الحقول الخاصة بهذه الميزة:</label>
 
           {form.fields.map((field, index) => (
             <div key={index} className="flex gap-4 my-2">
@@ -273,16 +289,7 @@ export default function AdminFeatures() {
             <tr key={f.id} className="border-t hover:bg-gray-50">
               <td className="p-3">{f.name}</td>
               <td className="p-3">{f.slug}</td>
-<td className="p-3 text-sm">
-  {!f.fields || typeof f.fields !== "object" || Array.isArray(f.fields)
-    ? "-"
-    : Object.entries(f.fields).map(([k, v]) => (
-        <div key={k}>
-          {k} ({v})
-        </div>
-      ))}
-</td>
-
+              <td className="p-3 text-sm">{renderFieldsList(f.fields)}</td>
               <td className="p-3 text-center space-x-2">
                 <button
                   onClick={() => startEdit(f)}
