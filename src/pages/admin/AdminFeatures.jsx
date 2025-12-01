@@ -273,15 +273,16 @@ export default function AdminFeatures() {
             <tr key={f.id} className="border-t hover:bg-gray-50">
               <td className="p-3">{f.name}</td>
               <td className="p-3">{f.slug}</td>
-              <td className="p-3 text-sm">
-                {Object.keys(f.fields || {}).length === 0
-                  ? "-"
-                  : Object.entries(f.fields || {}).map(([k, v]) => (
-                      <div key={k}>
-                        {k} ({v})
-                      </div>
-                    ))}
-              </td>
+<td className="p-3 text-sm">
+  {!f.fields || typeof f.fields !== "object" || Array.isArray(f.fields)
+    ? "-"
+    : Object.entries(f.fields).map(([k, v]) => (
+        <div key={k}>
+          {k} ({v})
+        </div>
+      ))}
+</td>
+
               <td className="p-3 text-center space-x-2">
                 <button
                   onClick={() => startEdit(f)}
