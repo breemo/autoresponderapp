@@ -30,7 +30,7 @@ export default function AdminClients() {
 
     const { data: clientsData, error } = await supabase
       .from("clients")
-      .select("id, business_name, email, plan_id, created_at")
+      .select("id, business_name, email, plan_id, is_active, created_at")
      /* .order("created_at", { ascending: false }); */
 
     if (error) {
@@ -61,7 +61,6 @@ export default function AdminClients() {
         business_name: form.business_name,
         email: form.email,
         plan_id: form.plan_id || null,
-        role: "client",
       },
     ]);
 
@@ -244,7 +243,11 @@ export default function AdminClients() {
                 <td className="p-3 text-center space-x-2 space-x-reverse">
                   <button
                     onClick={() => toggleStatus(c.id, c.is_active)}
-                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mx-1"
+                    className={
+                      c.is_active
+                        ? "bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mx-1"   // تعطيل
+                        : "bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 mx-1"       // تفعيل
+                    }
                   >
                     {c.is_active ? "تعطيل" : "تفعيل"}
                   </button>
