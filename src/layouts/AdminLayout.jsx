@@ -64,13 +64,13 @@ export default function AdminLayout({ children }) {
             <li>
               <Link
                 to="/admin/features"
-                className={`block px-4 py-2 rounded ${
+                className={`block px-4 py-2 rounded ${ 
                   location.pathname.startsWith("/admin/features")
                     ? "bg-blue-600 text-white"
                     : "text-gray-700 hover:bg-gray-200"
                 }`}
               >
-                إدارة الميزات
+                 🔁 <span> إدارة الميزات  </span> 
               </Link>
             
             </li>
