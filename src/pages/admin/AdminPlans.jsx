@@ -213,6 +213,13 @@ export default function AdminPlans() {
                 </td>
                 <td className="p-3">{p.description || "-"}</td>
                 <td className="p-3 text-center space-x-2 space-x-reverse">
+                  <Link
+  to={`/admin/plan-features/${p.id}`}
+  className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 mx-1"
+>
+  ميزات الباقة
+</Link>
+
                   <button
                     onClick={() => startEdit(p)}
                     className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mx-1"
