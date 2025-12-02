@@ -213,6 +213,9 @@ export default function AdminClientSettings({ clientIdOverride }) {
       }
 
       setMsg("✅ تم حفظ الإعدادات بنجاح");
+
+      await openFeatureDrawer(activeFeature);
+
     } catch (err) {
       console.error("Save Error:", err);
       setMsg("❌ خطأ أثناء حفظ الإعدادات: " + (err?.message || "غير معروف"));
