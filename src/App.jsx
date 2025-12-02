@@ -3,6 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import AdminPlanFeatures from "./pages/admin/AdminPlanFeatures.jsx";
+import ClientFeatureSettings from "./pages/client/ClientFeatureSettings.jsx";
 
 // Layouts
 import AdminLayout from "./layouts/AdminLayout.jsx";
@@ -109,7 +110,14 @@ export default function App() {
             path="/client/integrations"
             element={<ClientRoute><ClientIntegrations /></ClientRoute>}
           />
-
+<Route
+  path="/client/feature-settings"
+  element={
+    <ClientRoute>
+      <ClientFeatureSettings />
+    </ClientRoute>
+  }
+/>
         </Routes>
       </Router>
     </AuthProvider>
