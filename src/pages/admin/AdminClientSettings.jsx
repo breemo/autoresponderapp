@@ -118,51 +118,60 @@ export default function AdminClientSettings({ clientIdOverride }) {
   }
 
   // فتح الـ Drawer لميزة معيّنة
-  async function openFeatureDrawer(feature) {
-    if (!effectiveClientId) return;
+async function openFeatureDrawer(feature) {
+  if (!effectiveClientId) return;
 
-    setMsg("");
-    setActiveFeature(feature);
-    setDrawerOpen(true);
-    setSaving(false);
-    setSettingsRowId(null);
+  setMsg("");
+  setActiveFeature(feature);
+  setDrawerOpen(true);
+  setSaving(false);
+  setSettingsRowId(null);
+  setFeatureValues({});  // ضرورية لإعادة التهيئة الصحيحة
 
-    // تحديد إذا الفورم قابل للتعديل أم لا
-    const isAdmin = user?.role === "admin";
-    const clientCanEdit = plan?.allow_self_edit === true;
-    setReadOnly(!isAdmin && !clientCanEdit);
+  // صلاحيات التعديل
+  const isAdmin = user?.role === "admin";
+  const clientCanEdit = plan?.allow_self_edit === true;
+  setReadOnly(!isAdmin && !clientCanEdit);
 
-    // نقرأ إعدادات العميل لهذه الميزة من client_settings
-    const { data, error } = await supabase
-      .from("client_settings")
-      .select("id, settings")
-      .eq("client_id", effectiveClientId)
-      .eq("feature_id", feature.id)
-      .maybeSingle();
+  // جلب الإعدادات المخزنة
+  const { data, error } = await supabase
+    .from("client_settings")
+    .select("id, settings")
+    .eq("client_id", effectiveClientId)
+    .eq("feature_id", feature.id)
+    .maybeSingle();
 
-    if (error) {
-      console.error(error);
-    }
-
-    if (data) {
-      setSettingsRowId(data.id);
-    }
-
-    // تجهيز قيم الحقول حسب fields في جدول features
-    const fieldsDef =
-      feature.fields && typeof feature.fields === "object" && !Array.isArray(feature.fields)
-        ? feature.fields
-        : {};
-
-    const existingSettings = (data && data.settings) || {};
-
-    const initialValues = {};
-    Object.entries(fieldsDef).forEach(([fieldName]) => {
-      initialValues[fieldName] = existingSettings[fieldName] ?? "";
-    });
-
-    setFeatureValues(initialValues);
+  if (error) {
+    console.error(error);
   }
+
+  if (data) {
+    setSettingsRowId(data.id);
+  }
+
+  // تعريف الحقول من جدول features
+  const fieldsDef =
+    feature.fields &&
+    typeof feature.fields === "object" &&
+    !Array.isArray(feature.fields)
+      ? feature.fields
+      : {};
+
+  const existingSettings = (data && data.settings) || {};
+
+  // توليد قيم أولية جديدة… React رح يشوفها تغيير فعلي
+  const initialValues = {};
+  Object.entries(fieldsDef).forEach(([fieldName]) => {
+    initialValues[fieldName] =
+      existingSettings[fieldName] !== undefined
+        ? existingSettings[fieldName]
+        : "";
+  });
+
+  // التحديث الحقيقي اللي برجع يحرّك الـ render
+  setFeatureValues(initialValues);
+}
+
 
   function closeFeatureDrawer() {
     setDrawerOpen(false);
