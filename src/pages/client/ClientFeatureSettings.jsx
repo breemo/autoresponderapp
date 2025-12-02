@@ -13,13 +13,31 @@ export default function ClientFeatureSettings() {
     );
   }
 
-  if (!user.client_id) {
-    return (
-      <p className="text-red-500">
-        لا يوجد عميل مرتبط بهذا المستخدم (client_id مفقود).
-      </p>
-    );
-  }
+ 
+
+
+// 1) جلب بيانات العميل عبر الإيميل
+const { data: client, error } = await supabase
+  .from("clients")
+  .select("*")
+  .eq("email", user.email)
+  .single();
+
+if (error || !client) {
+  setError("⚠️ لا يوجد حساب عميل مرتبط بهذا المستخدم");
+  return;
+}
+
+// 2) استخراج client.id للاستخدام
+const clientId = client.id;
+setClient(client); // إذا عندك state للعميل
+
+
+
+
+
+
+  
 
   // نعيد استخدام نفس الصفحة لكن مع clientIdOverride
   return <AdminClientSettings clientIdOverride={user.client_id} />;
