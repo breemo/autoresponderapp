@@ -3,8 +3,9 @@ import { useParams } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-export default function AdminClientSettings() {
-  const { id: clientId } = useParams();
+export default function AdminClientSettings({ clientIdOverride }) {
+  const params = useParams();
+  const effectiveClientId = clientIdOverride || params.id; // <-- مهم
   const { user } = useAuth(); // admin or client
 
   const [client, setClient] = useState(null);
@@ -23,10 +24,15 @@ export default function AdminClientSettings() {
   const [readOnly, setReadOnly] = useState(false);
 
   useEffect(() => {
-    fetchClientAndFeatures();
-  }, [clientId]);
+    if (effectiveClientId) {
+      fetchClientAndFeatures(effectiveClientId);
+    } else {
+      setLoading(false);
+      setMsg("❌ لم يتم تحديد العميل");
+    }
+  }, [effectiveClientId]);
 
-  async function fetchClientAndFeatures() {
+  async function fetchClientAndFeatures(clientId) {
     setLoading(true);
     setMsg("");
 
@@ -113,6 +119,8 @@ export default function AdminClientSettings() {
 
   // فتح الـ Drawer لميزة معيّنة
   async function openFeatureDrawer(feature) {
+    if (!effectiveClientId) return;
+
     setMsg("");
     setActiveFeature(feature);
     setDrawerOpen(true);
@@ -128,7 +136,7 @@ export default function AdminClientSettings() {
     const { data, error } = await supabase
       .from("client_settings")
       .select("id, settings")
-      .eq("client_id", clientId)
+      .eq("client_id", effectiveClientId)
       .eq("feature_id", feature.id)
       .maybeSingle();
 
@@ -174,18 +182,12 @@ export default function AdminClientSettings() {
   async function handleSaveFeature(e) {
     e.preventDefault();
     if (readOnly) return;
-    if (!activeFeature) return;
+    if (!activeFeature || !effectiveClientId) return;
 
     setSaving(true);
     setMsg("");
 
     try {
-      const payload = {
-        client_id: clientId,
-        feature_id: activeFeature.id,
-        settings: featureValues,
-      };
-
       if (settingsRowId) {
         const { error } = await supabase
           .from("client_settings")
@@ -196,7 +198,13 @@ export default function AdminClientSettings() {
       } else {
         const { data, error } = await supabase
           .from("client_settings")
-          .insert([payload])
+          .insert([
+            {
+              client_id: effectiveClientId,
+              feature_id: activeFeature.id,
+              settings: featureValues,
+            },
+          ])
           .select("id")
           .single();
 
@@ -204,10 +212,10 @@ export default function AdminClientSettings() {
         setSettingsRowId(data.id);
       }
 
-      setMsg("✅ تم حفظ إعدادات الميزة بنجاح");
+      setMsg("✅ تم حفظ الإعدادات بنجاح");
     } catch (err) {
-        console.error("Save Error:", err);
-        setMsg("❌ خطأ أثناء حفظ الإعدادات: " + (err?.message || "UNKNOWN ERROR"));
+      console.error("Save Error:", err);
+      setMsg("❌ خطأ أثناء حفظ الإعدادات: " + (err?.message || "غير معروف"));
     }
 
     setSaving(false);
@@ -363,7 +371,7 @@ export default function AdminClientSettings() {
             </form>
           </div>
 
-          {/* الـ Overlay على بقية الصفحة (يمين) */}
+          {/* الـ Overlay */}
           <div
             className="flex-1 h-full bg-black/40"
             onClick={closeFeatureDrawer}
