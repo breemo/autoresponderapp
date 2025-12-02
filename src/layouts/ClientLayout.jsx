@@ -31,6 +31,7 @@ const menuItems = [
     icon: <BoltIcon className="w-5 h-5" />,
   },
   { to: "/client/integrations", label: "التكاملات (Integrations)" },
+  { label: "إعدادات الميزات", to: "/client/feature-settings",},
 
   {
     to: "/client/settings",
