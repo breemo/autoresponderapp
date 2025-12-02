@@ -234,6 +234,7 @@ export default function AdminPlans() {
                 </td>
                 <td className="p-3">{p.description || "-"}</td>
                 <td className="p-3 text-center space-x-2 space-x-reverse">
+                <td>{p.allow_self_edit}</td>
                   <Link
   to={`/admin/plan-features/${p.id}`}
   className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 mx-1"
