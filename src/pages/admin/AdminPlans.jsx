@@ -13,6 +13,8 @@ export default function AdminPlans() {
     name: "",
     price: "",
     description: "",
+    allow_self_edit: false
+
   });
   const [editingId, setEditingId] = useState(null); // null = إضافة، غير هيك = تعديل
 
@@ -70,6 +72,8 @@ export default function AdminPlans() {
             name: form.name,
             price: priceNumber,
             description: form.description || null,
+            allow_self_edit: form.allow_self_edit
+
           })
           .eq("id", editingId);
 
@@ -82,6 +86,8 @@ export default function AdminPlans() {
             name: form.name,
             price: priceNumber,
             description: form.description || null,
+              allow_self_edit: form.allow_self_edit
+
           },
         ]);
 
@@ -102,6 +108,8 @@ export default function AdminPlans() {
       name: plan.name || "",
       price: plan.price?.toString() || "",
       description: plan.description || "",
+      allow_self_edit: plan.allow_self_edit
+
     });
     setEditingId(plan.id);
     setMsg("");
@@ -171,6 +179,18 @@ export default function AdminPlans() {
             className="border rounded px-3 py-2 w-full"
           />
         </div>
+<div className="flex items-center gap-2">
+  <input
+    type="checkbox"
+    name="allow_self_edit"
+    checked={form.allow_self_edit}
+    onChange={(e) => setForm(prev => ({ 
+      ...prev, 
+      allow_self_edit: e.target.checked 
+    }))}
+  />
+  <label>السماح للعميل بتعديل إعدادات الميزات</label>
+</div>
 
         <button
           type="submit"
