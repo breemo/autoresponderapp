@@ -125,31 +125,34 @@ async function openFeatureDrawer(feature) {
   setActiveFeature(feature);
   setDrawerOpen(true);
   setSaving(false);
-  setSettingsRowId(null);
-  setFeatureValues({});  // ضرورية لإعادة التهيئة الصحيحة
+
+  // ❌ لا تعمل reset هنا
+  // setSettingsRowId(null);
+  // setFeatureValues({});
 
   // صلاحيات التعديل
   const isAdmin = user?.role === "admin";
   const clientCanEdit = plan?.allow_self_edit === true;
   setReadOnly(!isAdmin && !clientCanEdit);
 
-  // جلب الإعدادات المخزنة
+  // جلب الإعدادات
   const { data, error } = await supabase
     .from("client_settings")
     .select("id, settings")
     .eq("client_id", effectiveClientId)
     .eq("feature_id", feature.id)
     .maybeSingle();
+-
+  if (error) console.error(error);
 
-  if (error) {
-    console.error(error);
-  }
-
+  // لو وجد row، خزّنه
   if (data) {
     setSettingsRowId(data.id);
+  } else {
+    setSettingsRowId(null);
   }
 
-  // تعريف الحقول من جدول features
+  // تجهيز الحقول
   const fieldsDef =
     feature.fields &&
     typeof feature.fields === "object" &&
@@ -159,16 +162,11 @@ async function openFeatureDrawer(feature) {
 
   const existingSettings = (data && data.settings) || {};
 
-  // توليد قيم أولية جديدة… React رح يشوفها تغيير فعلي
   const initialValues = {};
-  Object.entries(fieldsDef).forEach(([fieldName]) => {
-    initialValues[fieldName] =
-      existingSettings[fieldName] !== undefined
-        ? existingSettings[fieldName]
-        : "";
+  Object.entries(fieldsDef).forEach(([f]) => {
+    initialValues[f] = existingSettings[f] ?? "";
   });
 
-  // التحديث الحقيقي اللي برجع يحرّك الـ render
   setFeatureValues(initialValues);
 }
 
@@ -198,28 +196,31 @@ async function openFeatureDrawer(feature) {
 
     try {
       if (settingsRowId) {
-        const { error } = await supabase
-          .from("client_settings")
-          .update({ settings: featureValues })
-          .eq("id", settingsRowId);
+  // تحديث نفس الريكورد
+  const { error } = await supabase
+    .from("client_settings")
+    .update({ settings: featureValues })
+    .eq("id", settingsRowId);
 
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabase
-          .from("client_settings")
-          .insert([
-            {
-              client_id: effectiveClientId,
-              feature_id: activeFeature.id,
-              settings: featureValues,
-            },
-          ])
-          .select("id")
-          .single();
+  if (error) throw error;
+} else {
+  // إضافة جديدة (مرة واحدة فقط)
+  const { data, error } = await supabase
+    .from("client_settings")
+    .insert([
+      {
+        client_id: effectiveClientId,
+        feature_id: activeFeature.id,
+        settings: featureValues,
+      },
+    ])
+    .select("id")
+    .single();
 
-        if (error) throw error;
-        setSettingsRowId(data.id);
-      }
+  if (error) throw error;
+  setSettingsRowId(data.id);
+}
+
 
       setMsg("✅ تم حفظ الإعدادات بنجاح");
 /*
