@@ -28,7 +28,7 @@ export default function AdminPlans() {
 
     const { data, error } = await supabase
       .from("plans")
-      .select("id, name, price, description, allow_self_edit"")
+      .select("id, name, price, description, allow_self_edit")
       .order("price", { ascending: true });
 
     if (error) {
