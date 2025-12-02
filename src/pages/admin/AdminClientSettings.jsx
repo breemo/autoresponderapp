@@ -206,8 +206,8 @@ export default function AdminClientSettings() {
 
       setMsg("✅ تم حفظ إعدادات الميزة بنجاح");
     } catch (err) {
-      console.error(err);
-      setMsg("❌ حدث خطأ أثناء حفظ الإعدادات");
+        console.error("Save Error:", err);
+        setMsg("❌ خطأ أثناء حفظ الإعدادات: " + (err?.message || "UNKNOWN ERROR"));
     }
 
     setSaving(false);
