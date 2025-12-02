@@ -142,7 +142,7 @@ async function openFeatureDrawer(feature) {
     .eq("client_id", effectiveClientId)
     .eq("feature_id", feature.id)
     .maybeSingle();
--
+
   if (error) console.error(error);
 
   // لو وجد row، خزّنه
