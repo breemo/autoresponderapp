@@ -213,9 +213,26 @@ export default function AdminClientSettings({ clientIdOverride }) {
       }
 
       setMsg("✅ تم حفظ الإعدادات بنجاح");
-
+/*
       await openFeatureDrawer(activeFeature);
+*/
 
+      // جلب السطر المُحدث من client_settings بعد الحفظ
+      const { data: refreshed, error: refError } = await supabase
+        .from("client_settings")
+        .select("id, settings")
+        .eq("client_id", effectiveClientId)
+        .eq("feature_id", activeFeature.id)
+        .maybeSingle();
+      
+      if (!refError && refreshed) {
+        setSettingsRowId(refreshed.id);
+        setFeatureValues(refreshed.settings || {});
+      }
+
+
+
+      
     } catch (err) {
       console.error("Save Error:", err);
       setMsg("❌ خطأ أثناء حفظ الإعدادات: " + (err?.message || "غير معروف"));
