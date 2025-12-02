@@ -222,6 +222,7 @@ export default function AdminPlans() {
               <th className="p-3 text-left">اسم الخطة</th>
               <th className="p-3 text-left">السعر</th>
               <th className="p-3 text-left">الوصف</th>
+              <th className="p-3 text-center"> تعديل إعدادات الميزات</th>
               <th className="p-3 text-center">إجراءات</th>
             </tr>
           </thead>
