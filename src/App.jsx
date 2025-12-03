@@ -94,10 +94,14 @@ export default function App() {
             path="/client"
             element={<ClientRoute><ClientDashboard /></ClientRoute>}
           />
+
+
           <Route
             path="/client/messages"
             element={<ClientRoute><ClientMessages /></ClientRoute>}
           />
+
+          
           <Route
             path="/client/auto-replies"
             element={<ClientRoute><ClientAutoReplies /></ClientRoute>}
