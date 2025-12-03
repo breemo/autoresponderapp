@@ -2,14 +2,12 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-
-
-
 export default function ClientDashboard() {
-
   const { user } = useAuth();
-  const clientId = user?.client_id || user?.id;
-  
+
+  // نحدد client_id بشكل صحيح (من جدول clients وليس users)
+  const clientId = user?.client_id;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState({
@@ -21,30 +19,30 @@ export default function ClientDashboard() {
   });
 
   useEffect(() => {
-    if (!user) return;
+    if (!clientId) return;
 
     async function fetchStats() {
       try {
         setLoading(true);
         setError("");
 
-        // رسائل العميل
+        // 1) قراءة الرسائل
         const { data: messages, error: msgError } = await supabase
           .from("messages")
-          .select("id, text, direction, status, created_at")
+          .select("id, message, channel, sender, is_read, created_at")
           .eq("client_id", clientId)
           .order("created_at", { ascending: false });
 
         if (msgError) throw msgError;
 
         const totalMessages = messages?.length || 0;
-        const incoming =
-          messages?.filter((m) => m.direction === "in").length || 0;
-        const outgoing =
-          messages?.filter((m) => m.direction === "out").length || 0;
+        const incoming = messages?.filter((m) => m.channel === "in").length || 0;
+        const outgoing = messages?.filter((m) => m.channel === "out").length || 0;
+
+        // آخر 5 رسائل
         const lastMessages = (messages || []).slice(0, 5);
 
-        // الردود التلقائية
+        // 2) قراءة الردود التلقائية
         const { data: replies, error: replError } = await supabase
           .from("auto_replies")
           .select("id, is_active")
@@ -71,7 +69,7 @@ export default function ClientDashboard() {
     }
 
     fetchStats();
-  }, [user]);
+  }, [clientId]);
 
   return (
     <div>
@@ -121,9 +119,7 @@ export default function ClientDashboard() {
 
       {/* آخر الرسائل */}
       <div className="bg-white shadow rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">آخر الرسائل</h2>
-        </div>
+        <h2 className="text-xl font-semibold mb-4">آخر الرسائل</h2>
 
         {stats.lastMessages.length === 0 ? (
           <p className="text-gray-400 text-sm">لا توجد رسائل بعد.</p>
@@ -133,22 +129,18 @@ export default function ClientDashboard() {
               <tr>
                 <th className="py-2 text-right">النص</th>
                 <th className="py-2 text-right">الاتجاه</th>
-                <th className="py-2 text-right">الحالة</th>
+                <th className="py-2 text-right">من</th>
                 <th className="py-2 text-right">التاريخ</th>
               </tr>
             </thead>
             <tbody>
               {stats.lastMessages.map((m) => (
                 <tr key={m.id} className="border-b last:border-b-0">
-                  <td className="py-2 max-w-xs truncate">{m.text}</td>
+                  <td className="py-2 max-w-xs truncate">{m.message}</td>
                   <td className="py-2">
-                    {m.direction === "in" ? "واردة" : "صادرة"}
+                    {m.channel === "in" ? "واردة" : "صادرة"}
                   </td>
-                  <td className="py-2">
-                    <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">
-                      {m.status || "-"}
-                    </span>
-                  </td>
+                  <td className="py-2 text-gray-700">{m.sender || "-"}</td>
                   <td className="py-2 text-gray-500">
                     {m.created_at
                       ? new Date(m.created_at).toLocaleString("ar-EG")
