@@ -5,9 +5,10 @@ import { useAuth } from "../../context/AuthContext.jsx";
 export default function ClientDashboard() {
   const { user } = useAuth();
 
-  // نحدد client_id بشكل صحيح (من جدول clients وليس users)
-  const clientId = user?.client_id;
+  // تخزين client_id الحقيقي المستخرج من جدول clients
+  const [realClientId, setRealClientId] = useState(null);
 
+  // الإحصائيات
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [stats, setStats] = useState({
@@ -18,40 +19,63 @@ export default function ClientDashboard() {
     lastMessages: [],
   });
 
+  // ----------------------------------------------------------
+  // 1) جلب client_id الحقيقي عبر الإيميل
+  // ----------------------------------------------------------
   useEffect(() => {
-    if (!clientId) return;
+    async function loadClient() {
+      if (!user?.email) return;
+
+      const { data: client, error } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("email", user.email)
+        .single();
+
+      if (!error && client?.id) {
+        setRealClientId(client.id);
+      } else {
+        setError("⚠️ لم يتم العثور على حسابك كعميل");
+      }
+    }
+
+    loadClient();
+  }, [user]);
+
+  // ----------------------------------------------------------
+  // 2) جلب الإحصائيات بعد توفر client_id
+  // ----------------------------------------------------------
+  useEffect(() => {
+    if (!realClientId) return;
 
     async function fetchStats() {
       try {
         setLoading(true);
         setError("");
 
-        // 1) قراءة الرسائل
+        // الرسائل
         const { data: messages, error: msgError } = await supabase
           .from("messages")
           .select("id, message, channel, sender, is_read, created_at")
-          .eq("client_id", clientId)
+          .eq("client_id", realClientId)
           .order("created_at", { ascending: false });
 
         if (msgError) throw msgError;
 
         const totalMessages = messages?.length || 0;
-        const incoming = messages?.filter((m) => m.channel === "in").length || 0;
-        const outgoing = messages?.filter((m) => m.channel === "out").length || 0;
+        const incoming = messages.filter((m) => m.channel === "in").length;
+        const outgoing = messages.filter((m) => m.channel === "out").length;
+        const lastMessages = messages.slice(0, 5);
 
-        // آخر 5 رسائل
-        const lastMessages = (messages || []).slice(0, 5);
-
-        // 2) قراءة الردود التلقائية
+        // الردود التلقائية
         const { data: replies, error: replError } = await supabase
           .from("auto_replies")
           .select("id, is_active")
-          .eq("client_id", clientId);
+          .eq("client_id", realClientId);
 
         if (replError) throw replError;
 
-        const activeAutoReplies =
-          replies?.filter((r) => r.is_active).length || 0;
+        const activeAutoReplies = replies.filter((r) => r.is_active).length;
 
         setStats({
           totalMessages,
@@ -69,8 +93,11 @@ export default function ClientDashboard() {
     }
 
     fetchStats();
-  }, [clientId]);
+  }, [realClientId]);
 
+  // ----------------------------------------------------------
+  // 3) واجهة العرض
+  // ----------------------------------------------------------
   return (
     <div>
       <h1 className="text-3xl font-bold mb-2">
@@ -86,7 +113,7 @@ export default function ClientDashboard() {
         </div>
       )}
 
-      {/* الكروت */}
+      {/* البطاقات */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="bg-white shadow rounded-xl p-6 text-center">
           <p className="text-gray-500 mb-2">إجمالي الرسائل</p>
@@ -129,7 +156,7 @@ export default function ClientDashboard() {
               <tr>
                 <th className="py-2 text-right">النص</th>
                 <th className="py-2 text-right">الاتجاه</th>
-                <th className="py-2 text-right">من</th>
+                <th className="py-2 text-right">المرسل</th>
                 <th className="py-2 text-right">التاريخ</th>
               </tr>
             </thead>
@@ -142,9 +169,7 @@ export default function ClientDashboard() {
                   </td>
                   <td className="py-2 text-gray-700">{m.sender || "-"}</td>
                   <td className="py-2 text-gray-500">
-                    {m.created_at
-                      ? new Date(m.created_at).toLocaleString("ar-EG")
-                      : "-"}
+                    {new Date(m.created_at).toLocaleString("ar-EG")}
                   </td>
                 </tr>
               ))}
