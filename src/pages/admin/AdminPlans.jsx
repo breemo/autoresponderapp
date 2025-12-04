@@ -13,7 +13,10 @@ export default function AdminPlans() {
     name: "",
     price: "",
     description: "",
-    allow_self_edit: false
+    allow_self_edit: false,
+    auto_replies_limit: "",
+    integrations_limit: "",
+    messages_limit: "",
 
   });
   const [editingId, setEditingId] = useState(null); // null = إضافة، غير هيك = تعديل
@@ -28,7 +31,8 @@ export default function AdminPlans() {
 
     const { data, error } = await supabase
       .from("plans")
-      .select("id, name, price, description, allow_self_edit")
+      .select("id, name, price, description, allow_self_edit, auto_replies_limit, integrations_limit, messages_limit")
+
       .order("price", { ascending: true });
 
     if (error) {
@@ -47,7 +51,15 @@ export default function AdminPlans() {
   };
 
   const resetForm = () => {
-    setForm({ name: "", price: "", description: "" });
+  setForm({
+      name: "",
+      price: "",
+      description: "",
+      allow_self_edit: false,
+      auto_replies_limit: "",
+      integrations_limit: "",
+      messages_limit: "",
+    });
     setEditingId(null);
   };
 
@@ -72,7 +84,10 @@ export default function AdminPlans() {
             name: form.name,
             price: priceNumber,
             description: form.description || null,
-            allow_self_edit: form.allow_self_edit
+            allow_self_edit: form.allow_self_edit,
+            auto_replies_limit: form.auto_replies_limit,
+            integrations_limit: form.integrations_limit,
+            messages_limit: form.messages_limit
 
           })
           .eq("id", editingId);
@@ -86,7 +101,10 @@ export default function AdminPlans() {
             name: form.name,
             price: priceNumber,
             description: form.description || null,
-              allow_self_edit: form.allow_self_edit
+            allow_self_edit: form.allow_self_edit,
+            auto_replies_limit: form.auto_replies_limit,
+            integrations_limit: form.integrations_limit,
+            messages_limit: form.messages_limit
 
           },
         ]);
@@ -108,8 +126,11 @@ export default function AdminPlans() {
       name: plan.name || "",
       price: plan.price?.toString() || "",
       description: plan.description || "",
-      allow_self_edit: plan.allow_self_edit
+      allow_self_edit: plan.allow_self_edit,
 
+      auto_replies_limit: plan.auto_replies_limit,
+      integrations_limit: plan.integrations_limit,
+      messages_limit: plan.messages_limit
     });
     setEditingId(plan.id);
     setMsg("");
@@ -192,6 +213,46 @@ export default function AdminPlans() {
   <label>السماح للعميل بتعديل إعدادات الميزات</label>
 </div>
 
+
+<div>
+  <label className="block text-sm mb-1">حد الردود التلقائية</label>
+  <input
+    type="number"
+    name="auto_replies_limit"
+    value={form.auto_replies_limit}
+    onChange={handleChange}
+    className="border rounded px-3 py-2 w-40"
+  />
+</div>
+
+<div>
+  <label className="block text-sm mb-1">حد التكاملات</label>
+  <input
+    type="number"
+    name="integrations_limit"
+    value={form.integrations_limit}
+    onChange={handleChange}
+    className="border rounded px-3 py-2 w-40"
+  />
+</div>
+
+<div>
+  <label className="block text-sm mb-1">حد الرسائل</label>
+  <input
+    type="number"
+    name="messages_limit"
+    value={form.messages_limit}
+    onChange={handleChange}
+    className="border rounded px-3 py-2 w-40"
+  />
+</div>
+
+
+
+
+
+        
+
         <button
           type="submit"
           className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
@@ -221,8 +282,13 @@ export default function AdminPlans() {
             <tr>
               <th className="p-3 text-left">اسم الخطة</th>
               <th className="p-3 text-left">السعر</th>
-              <th className="p-3 text-left">الوصف</th>
+<th className="p-3 text-center">حد الردود</th>
+<th className="p-3 text-center">حد التكاملات</th>
+<th className="p-3 text-center">حد الرسائل</th>
+                            
               <th className="p-3 text-center"> تعديل إعدادات الميزات</th>
+
+              <th className="p-3 text-left">الوصف</th>
               <th className="p-3 text-center">إجراءات</th>
             </tr>
           </thead>
@@ -233,17 +299,22 @@ export default function AdminPlans() {
                 <td className="p-3">
                   {typeof p.price === "number" ? `$${p.price}` : p.price}
                 </td>
-                <td className="p-3">{p.description || "-"}</td>
+<td className="p-3 text-center">{p.auto_replies_limit ?? "-"}</td>
+<td className="p-3 text-center">{p.integrations_limit ?? "-"}</td>
+<td className="p-3 text-center">{p.messages_limit ?? "-"}</td>
+
                 <td className="p-3">
                   {p.allow_self_edit ? "✔ مسموح" : "✖ ممنوع"}
-                </td>
+                </td>  
+                <td className="p-3">{p.description || "-"}</td>
+
                 <td className="p-3 text-center space-x-2 space-x-reverse">
                   <Link
-  to={`/admin/plan-features/${p.id}`}
-  className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 mx-1"
->
-  ميزات الباقة
-</Link>
+                        to={`/admin/plan-features/${p.id}`}
+                        className="bg-indigo-600 text-white px-3 py-1 rounded hover:bg-indigo-700 mx-1"
+                      >
+                        ميزات الباقة
+                  </Link>
 
                   <button
                     onClick={() => startEdit(p)}
