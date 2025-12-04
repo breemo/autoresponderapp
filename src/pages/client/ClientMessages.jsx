@@ -27,21 +27,26 @@ export default function ClientMessages() {
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
 
-      // Filter direction
+      // Direction filter (optional - some messages may not have direction)
       if (direction !== "all") {
         query = query.eq("direction", direction);
       }
 
-      // Filter read status
+      // Read state
       if (readState === "read") query = query.eq("is_read", true);
       if (readState === "unread") query = query.eq("is_read", false);
 
       const { data, error } = await query;
       if (error) throw error;
 
-      let filtered = data;
+      // Normalize + defensive cleaning
+      let filtered = (data || []).map((msg) => ({
+        ...msg,
+        channel: msg.channel ? msg.channel.toLowerCase() : "",
+        direction: msg.direction || "unknown",
+      }));
 
-      // Search filter
+      // Search
       if (search.trim()) {
         filtered = filtered.filter((m) =>
           `${m.sender} ${m.message}`
@@ -57,7 +62,8 @@ export default function ClientMessages() {
 
       setMessages(filtered);
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError(err.message || "حدث خطأ أثناء تحميل الرسائل");
     } finally {
       setLoading(false);
     }
@@ -78,6 +84,7 @@ export default function ClientMessages() {
       <div className="bg-white shadow p-5 rounded-xl mb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
 
+          {/* Search */}
           <input
             className="border p-2 rounded"
             placeholder="بحث..."
@@ -85,19 +92,34 @@ export default function ClientMessages() {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <select className="border p-2 rounded" value={channel} onChange={(e) => setChannel(e.target.value)}>
+          {/* Channel */}
+          <select
+            className="border p-2 rounded"
+            value={channel}
+            onChange={(e) => setChannel(e.target.value)}
+          >
             <option value="all">كل القنوات</option>
             <option value="whatsapp">WhatsApp</option>
             <option value="telegram">Telegram</option>
           </select>
 
-          <select className="border p-2 rounded" value={direction} onChange={(e) => setDirection(e.target.value)}>
+          {/* Direction */}
+          <select
+            className="border p-2 rounded"
+            value={direction}
+            onChange={(e) => setDirection(e.target.value)}
+          >
             <option value="all">واردة وصادرة</option>
             <option value="in">واردة</option>
             <option value="out">صادرة</option>
           </select>
 
-          <select className="border p-2 rounded" value={readState} onChange={(e) => setReadState(e.target.value)}>
+          {/* Read state */}
+          <select
+            className="border p-2 rounded"
+            value={readState}
+            onChange={(e) => setReadState(e.target.value)}
+          >
             <option value="all">الكل</option>
             <option value="read">مقروءة</option>
             <option value="unread">غير مقروءة</option>
@@ -133,9 +155,15 @@ export default function ClientMessages() {
             <tbody>
               {messages.map((m) => (
                 <tr key={m.id} className="border-b">
-                  <td className="py-2">{m.message}</td>
+                  <td className="py-2 max-w-xs truncate">{m.message}</td>
                   <td className="py-2">{m.channel}</td>
-                  <td className="py-2">{m.direction === "in" ? "واردة" : "صادرة"}</td>
+                  <td className="py-2">
+                    {m.direction === "in"
+                      ? "واردة"
+                      : m.direction === "out"
+                      ? "صادرة"
+                      : "—"}
+                  </td>
                   <td className="py-2">
                     {m.is_read ? "✓ مقروءة" : "• غير مقروءة"}
                   </td>
