@@ -19,13 +19,14 @@ export default function AdminMessages() {
   const [page, setPage] = useState(1);
   const pageSize = 20;
 
+  // Load clients for filter dropdown
   async function loadClients() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("clients")
       .select("id, business_name, email")
       .order("business_name", { ascending: true });
 
-    setClients(data || []);
+    if (!error) setClients(data || []);
   }
 
   async function loadMessages() {
@@ -38,27 +39,33 @@ export default function AdminMessages() {
         .select("*, clients:client_id(business_name,email)")
         .order("created_at", { ascending: false });
 
-      // Filter by client
+      // Client filter
       if (clientFilter !== "all") query = query.eq("client_id", clientFilter);
 
-      // Filter by channel
-      if (channelFilter !== "all") query = query.eq("channel", channelFilter);
+      // Channel filter (normalized to lowercase)
+      if (channelFilter !== "all") {
+        query = query.ilike("channel", channelFilter.toLowerCase());
+      }
 
-      // Filter by direction
-      if (directionFilter !== "all")
+      // Direction filter
+      if (directionFilter !== "all") {
         query = query.eq("direction", directionFilter);
+      }
 
-      // Filter by read status
+      // Read filter
       if (readFilter === "read") query = query.eq("is_read", true);
       if (readFilter === "unread") query = query.eq("is_read", false);
 
       const { data, error } = await query;
-
       if (error) throw error;
 
-      let filtered = data;
+      let filtered = (data || []).map((msg) => ({
+        ...msg,
+        channel: msg.channel ? msg.channel.toLowerCase() : "", // normalize
+        direction: msg.direction || "unknown",
+      }));
 
-      // Search filter
+      // Global search
       if (search.trim()) {
         filtered = filtered.filter((m) =>
           `${m.sender} ${m.message}`
@@ -81,7 +88,7 @@ export default function AdminMessages() {
     loadMessages();
   }, []);
 
-  // pagination calc
+  // Pagination
   const start = (page - 1) * pageSize;
   const end = start + pageSize;
   const paginated = messages.slice(start, end);
@@ -94,10 +101,8 @@ export default function AdminMessages() {
 
       {/* Filters */}
       <div className="bg-white shadow rounded-xl p-5 mb-8">
-
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
 
-          {/* Search */}
           <input
             className="border p-2 rounded"
             placeholder="بحث عالمي..."
@@ -105,7 +110,6 @@ export default function AdminMessages() {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          {/* Client filter */}
           <select
             className="border p-2 rounded"
             value={clientFilter}
@@ -119,7 +123,6 @@ export default function AdminMessages() {
             ))}
           </select>
 
-          {/* Channel */}
           <select
             className="border p-2 rounded"
             value={channelFilter}
@@ -130,7 +133,6 @@ export default function AdminMessages() {
             <option value="telegram">Telegram</option>
           </select>
 
-          {/* Direction */}
           <select
             className="border p-2 rounded"
             value={directionFilter}
@@ -141,7 +143,6 @@ export default function AdminMessages() {
             <option value="out">صادرة</option>
           </select>
 
-          {/* Read state */}
           <select
             className="border p-2 rounded"
             value={readFilter}
@@ -164,7 +165,6 @@ export default function AdminMessages() {
 
       {/* Messages table */}
       <div className="bg-white shadow rounded-xl p-5">
-
         {loading ? (
           <p>جاري التحميل...</p>
         ) : paginated.length === 0 ? (
@@ -189,7 +189,11 @@ export default function AdminMessages() {
                   </td>
                   <td className="py-2">{m.channel}</td>
                   <td className="py-2">
-                    {m.direction === "in" ? "واردة" : "صادرة"}
+                    {m.direction === "in"
+                      ? "واردة"
+                      : m.direction === "out"
+                      ? "صادرة"
+                      : "—"}
                   </td>
                   <td className="py-2 truncate max-w-xs">{m.message}</td>
                   <td className="py-2">
@@ -204,7 +208,6 @@ export default function AdminMessages() {
           </table>
         )}
 
-        {/* Pagination */}
         {pageCount > 1 && (
           <div className="flex justify-center gap-3 mt-4">
             <button
