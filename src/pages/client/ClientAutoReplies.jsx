@@ -5,7 +5,9 @@ import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function ClientAutoReplies() {
   const { user } = useAuth();
-  const clientId = user?.client_id || user?.id;
+
+  // client_id الصحيح
+  const [clientId, setClientId] = useState(null);
 
   const [replies, setReplies] = useState([]);
   const [autoLimit, setAutoLimit] = useState(0);
@@ -23,7 +25,33 @@ export default function ClientAutoReplies() {
   });
 
   // -------------------------------------------
-  // Load plan limit + auto replies
+  // 1) جلب client_id بشكل مضمون 100%
+  // -------------------------------------------
+  useEffect(() => {
+    async function loadClientId() {
+      if (!user) return;
+
+      // إذا موجود جاهز من الـ Auth
+      if (user.client_id) {
+        setClientId(user.client_id);
+        return;
+      }
+
+      // جلب id عبر email
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("email", user.email)
+        .single();
+
+      if (data?.id) setClientId(data.id);
+    }
+
+    loadClientId();
+  }, [user]);
+
+  // -------------------------------------------
+  // 2) Load plan limit + auto replies
   // -------------------------------------------
   useEffect(() => {
     if (!clientId) return;
@@ -42,7 +70,7 @@ export default function ClientAutoReplies() {
 
         if (clientErr) throw clientErr;
 
-        // 2) Fetch plan limit
+        // 2) Fetch plan limits
         const { data: plan, error: planErr } = await supabase
           .from("plans")
           .select("auto_replies_limit")
@@ -64,7 +92,6 @@ export default function ClientAutoReplies() {
 
         setReplies(rData || []);
         setRepliesCount((rData || []).length);
-
       } catch (err) {
         console.error(err);
         setError("فشل في تحميل البيانات");
@@ -106,7 +133,7 @@ export default function ClientAutoReplies() {
       return;
     }
 
-    // منع الإضافة
+    // منع الإضافة فوق الحد
     if (!form.id && repliesCount >= autoLimit) {
       setError("لقد وصلت للحد الأقصى للردود التلقائية المتاحة في خطتك");
       return;
@@ -147,7 +174,7 @@ export default function ClientAutoReplies() {
 
       resetForm();
 
-      // Reload replies
+      // Reload
       const { data: updatedReplies } = await supabase
         .from("auto_replies")
         .select("*")
@@ -156,7 +183,6 @@ export default function ClientAutoReplies() {
 
       setReplies(updatedReplies || []);
       setRepliesCount(updatedReplies?.length || 0);
-
     } catch (err) {
       console.error(err);
       setError(err.message || "فشل في حفظ الرد التلقائي");
@@ -207,7 +233,6 @@ export default function ClientAutoReplies() {
       const updated = replies.filter((r) => r.id !== id);
       setReplies(updated);
       setRepliesCount(updated.length);
-
     } catch (err) {
       console.error(err);
       setError("فشل في حذف الرد");
