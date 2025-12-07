@@ -27,42 +27,46 @@ export default function ClientMessages() {
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
 
-      // Filter by direction (DB has this!!)
+      // Filter direction in DB level
       if (direction !== "all") {
         query = query.eq("direction", direction);
       }
 
-      // Filter by read state
+      // Filter read state
       if (readState === "read") query = query.eq("is_read", true);
       if (readState === "unread") query = query.eq("is_read", false);
 
       const { data, error } = await query;
       if (error) throw error;
 
-      let filtered = (data || []).map((msg) => ({
-        ...msg,
-        channel: msg.channel ? msg.channel.toLowerCase() : "",
-        direction: msg.direction || "unknown",
+      let filtered = data || [];
+
+      // Normalize data
+      filtered = filtered.map((m) => ({
+        ...m,
+        channel: (m.channel || "").toLowerCase(),
+        direction: m.direction || "unknown",
       }));
 
-      // Text search
+      // Search filter
       if (search.trim()) {
         filtered = filtered.filter((m) =>
-          `${m.sender} ${m.message}`
-            .toLowerCase()
-            .includes(search.toLowerCase())
+          (m.message || "").toLowerCase().includes(search.toLowerCase())
         );
       }
 
       // Channel filter
       if (channel !== "all") {
-        filtered = filtered.filter((m) => m.channel === channel);
+        filtered = filtered.filter(
+          (m) => m.channel === channel.toLowerCase()
+        );
       }
 
       setMessages(filtered);
+
     } catch (err) {
       console.error(err);
-      setError(err.message || "حدث خطأ أثناء تحميل الرسائل");
+      setError("حدث خطأ أثناء تحميل الرسائل");
     } finally {
       setLoading(false);
     }
@@ -82,6 +86,7 @@ export default function ClientMessages() {
       {/* Filters */}
       <div className="bg-white shadow p-5 rounded-xl mb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+
           {/* Search */}
           <input
             className="border p-2 rounded"
@@ -132,7 +137,7 @@ export default function ClientMessages() {
         </button>
       </div>
 
-      {/* Messages */}
+      {/* Messages table */}
       <div className="bg-white shadow rounded-xl p-5">
         {loading ? (
           <p>جارِ التحميل...</p>
