@@ -27,26 +27,25 @@ export default function ClientMessages() {
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
 
-      // Direction filter (optional - some messages may not have direction)
+      // Filter by direction (DB has this!!)
       if (direction !== "all") {
         query = query.eq("direction", direction);
       }
 
-      // Read state
+      // Filter by read state
       if (readState === "read") query = query.eq("is_read", true);
       if (readState === "unread") query = query.eq("is_read", false);
 
       const { data, error } = await query;
       if (error) throw error;
 
-      // Normalize + defensive cleaning
       let filtered = (data || []).map((msg) => ({
         ...msg,
         channel: msg.channel ? msg.channel.toLowerCase() : "",
         direction: msg.direction || "unknown",
       }));
 
-      // Search
+      // Text search
       if (search.trim()) {
         filtered = filtered.filter((m) =>
           `${m.sender} ${m.message}`
@@ -83,7 +82,6 @@ export default function ClientMessages() {
       {/* Filters */}
       <div className="bg-white shadow p-5 rounded-xl mb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-
           {/* Search */}
           <input
             className="border p-2 rounded"
@@ -134,7 +132,7 @@ export default function ClientMessages() {
         </button>
       </div>
 
-      {/* Messages table */}
+      {/* Messages */}
       <div className="bg-white shadow rounded-xl p-5">
         {loading ? (
           <p>جارِ التحميل...</p>
