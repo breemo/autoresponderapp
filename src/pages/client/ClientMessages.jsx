@@ -4,7 +4,8 @@ import { useAuth } from "../../context/AuthContext.jsx";
 
 export default function ClientMessages() {
   const { user } = useAuth();
-  const clientId = user?.client_id;
+
+  const clientId = user?.client_id || user?.id || user?.user_metadata?.client_id;
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
