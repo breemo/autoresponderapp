@@ -64,9 +64,13 @@ export default function ClientMessages() {
     }
   }
 
+
+
   useEffect(() => {
-    if (clientId) fetchMessages();
-  }, [clientId]);
+  console.log("🔵 Client ID =", clientId);
+  if (clientId) fetchMessages();
+}, [clientId]);
+
 
   return (
     <div>
