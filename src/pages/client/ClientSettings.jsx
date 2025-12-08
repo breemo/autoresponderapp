@@ -3,6 +3,10 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext.jsx";
 
+// helper بسيط لتطبيع الأسماء (للمقارنة بين label و key في config)
+function normalizeName(str) {
+  return (str || "").toString().toLowerCase().replace(/\s+/g, "");
+}
 
 export default function ClientSettings() {
   const { user } = useAuth();
@@ -107,7 +111,7 @@ export default function ClientSettings() {
               ...intg,
               config: {
                 ...(intg.config || {}),
-                [key]: value,
+                [key]: value, // نخزن بالقيمة key اللي هي label نفسه (مثلاً "Page ID")
               },
             }
           : intg
@@ -227,7 +231,24 @@ export default function ClientSettings() {
               <div className="space-y-4">
                 {activeIntegrations.map((intg) => {
                   const feature = getFeatureById(intg.feature_id);
-                  const fields = feature?.fields || [];
+
+                  // ⬇⬇⬇ التعديل المهم هنا: تطبيع fields حسب الشكل الجديد ⬇⬇⬇
+                  let fields = [];
+                  if (Array.isArray(feature?.fields)) {
+                    fields = feature.fields;
+                  } else if (
+                    feature?.fields &&
+                    typeof feature.fields === "object"
+                  ) {
+                    // مثال: { "Page ID": "text", "Access Token": "password" }
+                    fields = Object.entries(feature.fields).map(
+                      ([label, type]) => ({
+                        key: label, // نستخدم نفس النص كمفتاح في config
+                        label,
+                        type,
+                      })
+                    );
+                  }
 
                   return (
                     <div
@@ -260,30 +281,51 @@ export default function ClientSettings() {
                       </div>
 
                       {/* Dynamic fields */}
-                      {Array.isArray(fields) && fields.length > 0 ? (
+                      {fields.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                          {fields.map((field) => (
-                            <div key={field.key}>
-                              <label className="block text-xs text-gray-500 mb-1">
-                                {field.label || field.key}
-                              </label>
-                              <input
-                                type={field.type === "password" ? "password" : "text"}
-                                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                value={
-                                  (intg.config && intg.config[field.key]) || ""
-                                }
-                                onChange={(e) =>
-                                  handleFieldChange(
-                                    intg.id,
-                                    field.key,
-                                    e.target.value
-                                  )
-                                }
-                                placeholder={field.placeholder || ""}
-                              />
-                            </div>
-                          ))}
+                          {fields.map((field) => {
+                            // نحاول نقرأ القيمة من config:
+                            const cfg = intg.config || {};
+                            let value = cfg[field.key];
+
+                            // لو مش موجودة بالاسم المباشر، نجرب نطابق بالـ normalize
+                            if (value === undefined) {
+                              const normLabel = normalizeName(field.key);
+                              const found = Object.entries(cfg).find(
+                                ([k]) => normalizeName(k) === normLabel
+                              );
+                              if (found) {
+                                value = found[1];
+                              } else {
+                                value = "";
+                              }
+                            }
+
+                            return (
+                              <div key={field.key}>
+                                <label className="block text-xs text-gray-500 mb-1">
+                                  {field.label || field.key}
+                                </label>
+                                <input
+                                  type={
+                                    field.type === "password"
+                                      ? "password"
+                                      : "text"
+                                  }
+                                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  value={value}
+                                  onChange={(e) =>
+                                    handleFieldChange(
+                                      intg.id,
+                                      field.key,
+                                      e.target.value
+                                    )
+                                  }
+                                  placeholder={field.placeholder || ""}
+                                />
+                              </div>
+                            );
+                          })}
                         </div>
                       ) : (
                         <p className="text-xs text-gray-400 mb-2">
