@@ -137,8 +137,8 @@ async function openFeatureDrawer(feature) {
 
   // جلب الإعدادات
   const { data, error } = await supabase
-    .from("client_settings")
-    .select("id, settings")
+    .from("client_feature_integrations")
+    .select("id, config")
     .eq("client_id", effectiveClientId)
     .eq("feature_id", feature.id)
     .maybeSingle();
@@ -160,7 +160,7 @@ async function openFeatureDrawer(feature) {
       ? feature.fields
       : {};
 
-  const existingSettings = (data && data.settings) || {};
+  const existingSettings = (data && data.config) || {};
 
   const initialValues = {};
   Object.entries(fieldsDef).forEach(([f]) => {
@@ -198,20 +198,20 @@ async function openFeatureDrawer(feature) {
       if (settingsRowId) {
   // تحديث نفس الريكورد
   const { error } = await supabase
-    .from("client_settings")
-    .update({ settings: featureValues })
+    .from("client_feature_integrations")
+    .update({ config: featureValues })
     .eq("id", settingsRowId);
 
   if (error) throw error;
 } else {
   // إضافة جديدة (مرة واحدة فقط)
   const { data, error } = await supabase
-    .from("client_settings")
+    .from("client_feature_integrations")
     .insert([
       {
         client_id: effectiveClientId,
         feature_id: activeFeature.id,
-        settings: featureValues,
+        config: featureValues,
       },
     ])
     .select("id")
@@ -227,10 +227,10 @@ async function openFeatureDrawer(feature) {
       await openFeatureDrawer(activeFeature);
 */
 
-      // جلب السطر المُحدث من client_settings بعد الحفظ
+      // جلب السطر المُحدث من client_feature_integrations بعد الحفظ
       const { data: refreshed, error: refError } = await supabase
-        .from("client_settings")
-        .select("id, settings")
+        .from("client_feature_integrations")
+        .select("id, config")
         .eq("client_id", effectiveClientId)
         .eq("feature_id", activeFeature.id)
         .maybeSingle();
