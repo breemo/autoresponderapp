@@ -112,7 +112,7 @@ export default function ClientSettings() {
 
   if (!error) {
     // حدّث state حتى يظهر بالفوراً
-    setIntegrationRows(prev =>
+    setIntegrations(prev =>
       prev.map(item =>
         item.feature_id === featureId
           ? { ...item, is_active: !currentValue }
@@ -293,8 +293,8 @@ export default function ClientSettings() {
 
 <input
   type="checkbox"
-  checked={row.is_active}
-  onChange={() => toggleActive(row.feature_id, row.is_active)}
+  checked={intg.is_active}
+  onChange={() => toggleActive(intg.feature_id, intg.is_active)}
 />
                           
                           <span>
