@@ -102,6 +102,29 @@ export default function ClientSettings() {
     (f) => !integrations.some((i) => i.feature_id === f.id)
   );
 
+
+  const toggleActive = async (featureId, currentValue) => {
+  const { error } = await supabase
+    .from("client_feature_integrations")
+    .update({ is_active: !currentValue })
+    .eq("client_id", clientId)
+    .eq("feature_id", featureId);
+
+  if (!error) {
+    // حدّث state حتى يظهر بالفوراً
+    setIntegrationRows(prev =>
+      prev.map(item =>
+        item.feature_id === featureId
+          ? { ...item, is_active: !currentValue }
+          : item
+      )
+    );
+  }
+};
+
+
+  
+
   // ===== Handlers =====
   function handleFieldChange(integrationId, key, value) {
     setIntegrations((prev) =>
@@ -266,14 +289,21 @@ export default function ClientSettings() {
                         </div>
 
                         <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            className="rounded"
-                            checked={!!intg.is_active}
-                            onChange={(e) =>
-                              handleToggleActive(intg.id, e.target.checked)
-                            }
-                          />
+                        //  <input
+                        //    type="checkbox"
+                        //    className="rounded"
+                        //    checked={!!intg.is_active}
+                        //    onChange={(e) =>
+                        //      handleToggleActive(intg.id, e.target.checked)
+                        //    }
+                        //  />
+
+<input
+  type="checkbox"
+  checked={row.is_active}
+  onChange={() => toggleActive(row.feature_id, row.is_active)}
+/>
+                          
                           <span>
                             {intg.is_active ? "مفعّل" : "معطّل"}
                           </span>
