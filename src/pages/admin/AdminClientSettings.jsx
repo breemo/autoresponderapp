@@ -237,7 +237,7 @@ async function openFeatureDrawer(feature) {
       
       if (!refError && refreshed) {
         setSettingsRowId(refreshed.id);
-        setFeatureValues(refreshed.settings || {});
+        setFeatureValues(refreshed.config || {});
       }
 
 
