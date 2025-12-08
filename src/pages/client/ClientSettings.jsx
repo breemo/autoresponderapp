@@ -292,7 +292,7 @@ export default function ClientSettings() {
                   
 
 <input
-  type="checkbox" className="rounded"
+  type="checkbox"
   checked={row.is_active}
   onChange={() => toggleActive(row.feature_id, row.is_active)}
 />
