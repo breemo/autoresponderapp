@@ -289,18 +289,10 @@ export default function ClientSettings() {
                         </div>
 
                         <label className="flex items-center gap-2 text-sm">
-                     /*   //  <input
-                        //    type="checkbox"
-                        //    className="rounded"
-                        //    checked={!!intg.is_active}
-                        //    onChange={(e) =>
-                        //      handleToggleActive(intg.id, e.target.checked)
-                        //    }
-                        //  />
-                                */
+                  
 
 <input
-  type="checkbox"
+  type="checkbox" className="rounded"
   checked={row.is_active}
   onChange={() => toggleActive(row.feature_id, row.is_active)}
 />
