@@ -11,30 +11,51 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+const handleLogin = async (e) => {
+  e.preventDefault();
 
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", email)
-      .eq("password", password)
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .eq("password", password)
+    .single();
+
+  if (error || !user) {
+    setMessage("❌ البريد الإلكتروني أو كلمة المرور غير صحيحة");
+    return;
+  }
+
+  // 🔍 1) نجلب بيانات العميل من جدول clients
+  let clientData = null;
+  if (user.role === "client") {
+    const { data: cData } = await supabase
+      .from("clients")
+      .select("id, business_name, email")
+      .eq("email", user.email)
       .single();
 
-    if (error || !user) {
-      setMessage("❌ البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      return;
-    }
+    clientData = cData;
+  }
 
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
-
-    setMessage(`✅ مرحبًا ${user.role === "admin" ? "بالمدير" : "بالعميل"}!`);
-
-    setTimeout(() => {
-      navigate(user.role === "admin" ? "/admin" : "/client");
-    }, 500);
+  // 🧠 2) ندمج ال user مع clientData بحيث يصير عنده client_id
+  const finalUser = {
+    ...user,
+    client_id: clientData?.id || null,
+    business_name: clientData?.business_name || null,
   };
+
+  // 💾 3) نخزن البيانات الصحيحة للـ user
+  localStorage.setItem("user", JSON.stringify(finalUser));
+  setUser(finalUser);
+
+  setMessage(`✅ مرحبًا ${user.role === "admin" ? "بالمدير" : "بالعميل"}!`);
+
+  setTimeout(() => {
+    navigate(user.role === "admin" ? "/admin" : "/client");
+  }, 500);
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
