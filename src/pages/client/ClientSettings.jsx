@@ -289,7 +289,7 @@ export default function ClientSettings() {
                         </div>
 
                         <label className="flex items-center gap-2 text-sm">
-                        //  <input
+                     /*   //  <input
                         //    type="checkbox"
                         //    className="rounded"
                         //    checked={!!intg.is_active}
@@ -297,6 +297,7 @@ export default function ClientSettings() {
                         //      handleToggleActive(intg.id, e.target.checked)
                         //    }
                         //  />
+                                */
 
 <input
   type="checkbox"
