@@ -241,6 +241,7 @@ export default function ClientMessages() {
         <p className="text-gray-500">استعرض المحادثات والرسائل الخاصة بك.</p>
       </div>
 
+      {false && (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white shadow rounded-xl p-4">
           <div className="text-sm text-gray-500 mb-1">إجمالي المحادثات</div>
@@ -259,11 +260,12 @@ export default function ClientMessages() {
           <div className="text-2xl font-bold text-green-600">{stats.leads}</div>
         </div>
       </div>
+      )}
 
       {error ? <div className="bg-red-50 text-red-600 p-4 rounded-xl">{error}</div> : null}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        <div className="bg-white shadow rounded-xl p-4 lg:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="bg-white shadow rounded-xl p-4 lg:col-span-3">
           <h2 className="font-bold mb-4">المحادثات</h2>
 
           <div className="space-y-3 mb-4">
@@ -358,7 +360,7 @@ export default function ClientMessages() {
           )}
         </div>
 
-        <div className="bg-white shadow rounded-xl p-4 lg:col-span-2">
+        <div className="bg-white shadow rounded-xl p-4 lg:col-span-9">
           {!selectedConversation ? (
             <p className="text-gray-400 text-sm">لا توجد محادثة مطابقة للفلاتر الحالية.</p>
           ) : (
@@ -397,16 +399,16 @@ export default function ClientMessages() {
                   </button>
                 </div>
 
-                <div className="bg-gray-50 rounded-xl p-3 border">
-                  <h3 className="font-semibold text-sm mb-2">بيانات الـ Lead</h3>
+                <div className="bg-gray-50 rounded-lg px-3 py-2 border mb-1">
+                  <h3 className="font-semibold text-sm mb-1">بيانات الـ Lead</h3>
                   {selectedLead ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                       <div>
-                        <div className="text-gray-500 mb-1">الاسم</div>
+                        <div className="text-gray-500 mb-0.5">الاسم</div>
                         <div className="font-medium">{selectedLead.name || "-"}</div>
                       </div>
                       <div>
-                        <div className="text-gray-500 mb-1">رقم الهاتف</div>
+                        <div className="text-gray-500 mb-0.5">رقم الهاتف</div>
                         <div className="font-medium">{selectedLead.phone || "-"}</div>
                       </div>
                     </div>
