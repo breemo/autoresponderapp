@@ -56,15 +56,11 @@ export default function ClientMessages() {
           last_message_at: latest?.created_at || conv.updated_at,
           channel: latest?.channel || conv.platform || "",
           sender: latest?.sender || conv.sender_id || "",
-          last_direction: latest?.direction || ""
+          last_direction: latest?.direction || "",
         };
       });
 
       setConversations(merged);
-
-      if (!selectedConversationId && merged.length > 0) {
-        setSelectedConversationId(merged[0].conversation_id);
-      }
     } catch (err) {
       console.error(err);
       setError("فشل في جلب المحادثات");
@@ -103,14 +99,6 @@ export default function ClientMessages() {
     }
   }, [clientId]);
 
-  useEffect(() => {
-    if (selectedConversationId) {
-      fetchConversationMessages(selectedConversationId);
-    } else {
-      setConversationMessages([]);
-    }
-  }, [selectedConversationId]);
-
   const filteredConversations = useMemo(() => {
     return conversations.filter((conv) => {
       const matchesSearch =
@@ -129,71 +117,92 @@ export default function ClientMessages() {
     });
   }, [conversations, search, channel, status]);
 
-  const selectedConversation = filteredConversations.find(
-    (c) => c.conversation_id === selectedConversationId
-  ) || conversations.find((c) => c.conversation_id === selectedConversationId);
+  useEffect(() => {
+    if (filteredConversations.length === 0) {
+      setSelectedConversationId(null);
+      setConversationMessages([]);
+      return;
+    }
+
+    const exists = filteredConversations.some(
+      (c) => c.conversation_id === selectedConversationId
+    );
+
+    if (!exists) {
+      setSelectedConversationId(filteredConversations[0].conversation_id);
+    }
+  }, [filteredConversations, selectedConversationId]);
+
+  useEffect(() => {
+    if (selectedConversationId) {
+      fetchConversationMessages(selectedConversationId);
+    } else {
+      setConversationMessages([]);
+    }
+  }, [selectedConversationId]);
+
+  const selectedConversation =
+    filteredConversations.find(
+      (c) => c.conversation_id === selectedConversationId
+    ) || null;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold mb-1">الرسائل</h1>
-        <p className="text-gray-500">
-          استعرض المحادثات والرسائل الخاصة بك.
-        </p>
-      </div>
-
-      <div className="bg-white shadow p-5 rounded-xl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <input
-            className="border p-2 rounded"
-            placeholder="بحث..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
-          <select
-            className="border p-2 rounded"
-            value={channel}
-            onChange={(e) => setChannel(e.target.value)}
-          >
-            <option value="all">كل القنوات</option>
-            <option value="facebook">Facebook</option>
-            <option value="telegram">Telegram</option>
-            <option value="whatsapp">WhatsApp</option>
-          </select>
-
-          <select
-            className="border p-2 rounded"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
-            <option value="all">كل الحالات</option>
-            <option value="active">نشطة</option>
-            <option value="closed">مغلقة</option>
-            <option value="lead_captured">تم أخذ البيانات</option>
-          </select>
-
-          <button
-            onClick={fetchConversations}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            تحديث
-          </button>
-        </div>
+        <p className="text-gray-500">استعرض المحادثات والرسائل الخاصة بك.</p>
       </div>
 
       {error ? (
         <div className="bg-red-50 text-red-600 p-4 rounded-xl">{error}</div>
       ) : null}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="bg-white shadow rounded-xl p-4 lg:col-span-1">
           <h2 className="font-bold mb-4">المحادثات</h2>
+
+          <div className="space-y-3 mb-4">
+            <input
+              className="border p-2 rounded w-full"
+              placeholder="بحث..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <select
+              className="border p-2 rounded w-full"
+              value={channel}
+              onChange={(e) => setChannel(e.target.value)}
+            >
+              <option value="all">كل القنوات</option>
+              <option value="facebook">Facebook</option>
+              <option value="telegram">Telegram</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+
+            <select
+              className="border p-2 rounded w-full"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              <option value="all">كل الحالات</option>
+              <option value="active">نشطة</option>
+              <option value="closed">مغلقة</option>
+              <option value="lead_captured">تم أخذ البيانات</option>
+            </select>
+
+            <button
+              onClick={fetchConversations}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+            >
+              تحديث
+            </button>
+          </div>
 
           {loadingConversations ? (
             <p className="text-gray-500 text-center">جارِ التحميل...</p>
           ) : filteredConversations.length === 0 ? (
-            <p className="text-gray-400 text-sm">لا توجد محادثات.</p>
+            <p className="text-gray-400 text-sm">لا توجد نتائج.</p>
           ) : (
             <div className="space-y-2 max-h-[650px] overflow-y-auto">
               {filteredConversations.map((conv) => {
@@ -239,7 +248,7 @@ export default function ClientMessages() {
 
         <div className="bg-white shadow rounded-xl p-4 lg:col-span-2">
           {!selectedConversation ? (
-            <p className="text-gray-400 text-sm">اختر محادثة لعرض الرسائل.</p>
+            <p className="text-gray-400 text-sm">لا توجد محادثة مطابقة للبحث.</p>
           ) : (
             <>
               <div className="border-b pb-3 mb-4">
@@ -256,7 +265,7 @@ export default function ClientMessages() {
                     </p>
                   </div>
 
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-gray-400 break-all text-left">
                     {selectedConversation.conversation_id}
                   </div>
                 </div>
