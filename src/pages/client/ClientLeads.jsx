@@ -11,7 +11,6 @@ export default function ClientLeads() {
   const [error, setError] = useState("");
 
   const [search, setSearch] = useState("");
-  const [platform, setPlatform] = useState("all");
 
   async function fetchLeads() {
     try {
