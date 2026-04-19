@@ -9,7 +9,6 @@ export default function ClientLeads() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [search, setSearch] = useState("");
 
   async function fetchLeads() {
@@ -24,7 +23,6 @@ export default function ClientLeads() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-
       setLeads(data || []);
     } catch (err) {
       console.error(err);
@@ -40,55 +38,18 @@ export default function ClientLeads() {
 
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
-      const matchesSearch =
-        !search.trim() ||
-        `${lead.name || ""} ${lead.phone || ""}`
-          .toLowerCase()
-          .includes(search.toLowerCase());
-
-      const matchesPlatform =
-        platform === "all" || lead.platform === platform;
-
-      return matchesSearch && matchesPlatform;
+      if (!search.trim()) return true;
+      return `${lead.name || ""} ${lead.phone || ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase());
     });
-  }, [leads, search, platform]);
+  }, [leads, search]);
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold mb-1">Leads</h1>
-        <p className="text-gray-500">
-          قائمة العملاء الذين تم جمع بياناتهم.
-        </p>
-      </div>
-
-      <div className="bg-white shadow p-4 rounded-xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <input
-            className="border p-2 rounded"
-            placeholder="بحث بالاسم أو الرقم..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
-          <select
-            className="border p-2 rounded"
-            value={platform}
-            onChange={(e) => setPlatform(e.target.value)}
-          >
-            <option value="all">كل المنصات</option>
-            <option value="facebook">Facebook</option>
-            <option value="telegram">Telegram</option>
-            <option value="whatsapp">WhatsApp</option>
-          </select>
-
-          <button
-            onClick={fetchLeads}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            تحديث
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold mb-1">أرقام التواصل للزبائن</h1>
+        <p className="text-gray-500">قائمة العملاء الذين تم جمع بياناتهم.</p>
       </div>
 
       {error && (
@@ -96,34 +57,42 @@ export default function ClientLeads() {
       )}
 
       <div className="bg-white shadow rounded-xl p-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+          <input
+            className="border p-2 rounded md:w-80"
+            placeholder="بحث بالاسم أو الرقم..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          <button
+            onClick={fetchLeads}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 md:w-32"
+          >
+            تحديث
+          </button>
+        </div>
+
         {loading ? (
-          <p className="text-gray-500 text-center">جارِ التحميل...</p>
+          <p className="text-gray-500 text-center py-8">جارِ التحميل...</p>
         ) : filteredLeads.length === 0 ? (
-          <p className="text-gray-400 text-center">لا يوجد Leads</p>
+          <p className="text-gray-400 text-center py-8">لا يوجد Leads</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-right">
               <thead>
                 <tr className="border-b text-gray-500">
-                  <th className="py-2">الاسم</th>
-                  <th className="py-2">الرقم</th>
-                  <th className="py-2">المنصة</th>
-                  <th className="py-2">التاريخ</th>
+                  <th className="py-3">الاسم</th>
+                  <th className="py-3">الرقم</th>
+                  <th className="py-3">التاريخ</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="border-b">
-                    <td className="py-2">
-                      {lead.name || "—"}
-                    </td>
-                    <td className="py-2">
-                      {lead.phone || "—"}
-                    </td>
-                    <td className="py-2">
-                      {lead.platform || "—"}
-                    </td>
-                    <td className="py-2">
+                  <tr key={lead.id} className="border-b last:border-b-0">
+                    <td className="py-3">{lead.name || "—"}</td>
+                    <td className="py-3">{lead.phone || "—"}</td>
+                    <td className="py-3">
                       {lead.created_at
                         ? new Date(lead.created_at).toLocaleString("ar-EG")
                         : "—"}
