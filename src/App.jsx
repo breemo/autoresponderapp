@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import AdminPlanFeatures from "./pages/admin/AdminPlanFeatures.jsx";
 
-
 // Layouts
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import ClientLayout from "./layouts/ClientLayout.jsx";
@@ -29,9 +28,8 @@ import ClientAutoReplies from "./pages/client/ClientAutoReplies.jsx";
 import ClientSettings from "./pages/client/ClientSettings.jsx";
 import ClientIntegrations from "./pages/client/ClientIntegrations.jsx";
 import ClientFeatureSettings from "./pages/client/ClientFeatureSettings.jsx";
-import ClientLeads from "./pages/client/ClientLeads";
+import ClientLeads from "./pages/client/ClientLeads.jsx";
 
-// ----------- Route Guards -------------
 function AdminRoute({ children }) {
   const { user } = useAuth();
   if (!user || user.role !== "admin") return <Navigate to="/" replace />;
@@ -44,17 +42,13 @@ function ClientRoute({ children }) {
   return <ClientLayout>{children}</ClientLayout>;
 }
 
-// ----------- Main App -------------
 export default function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-
-          {/* Login */}
           <Route path="/" element={<Login />} />
 
-          {/* Admin */}
           <Route
             path="/admin"
             element={<AdminRoute><AdminDashboard /></AdminRoute>}
@@ -87,23 +81,23 @@ export default function App() {
             path="/admin/client/:id"
             element={<AdminRoute><AdminClientSettings /></AdminRoute>}
           />
-<Route
-  path="/admin/plan-features/:planId"
-  element={<AdminRoute><AdminPlanFeatures /></AdminRoute>}
-/>
-          {/* Client */}
+          <Route
+            path="/admin/plan-features/:planId"
+            element={<AdminRoute><AdminPlanFeatures /></AdminRoute>}
+          />
+
           <Route
             path="/client"
             element={<ClientRoute><ClientDashboard /></ClientRoute>}
           />
-
-
           <Route
             path="/client/messages"
             element={<ClientRoute><ClientMessages /></ClientRoute>}
           />
-          <Route path="leads" element={<ClientLeads />} /> {}
-
+          <Route
+            path="/client/leads"
+            element={<ClientRoute><ClientLeads /></ClientRoute>}
+          />
           <Route
             path="/client/auto-replies"
             element={<ClientRoute><ClientAutoReplies /></ClientRoute>}
@@ -116,14 +110,10 @@ export default function App() {
             path="/client/integrations"
             element={<ClientRoute><ClientIntegrations /></ClientRoute>}
           />
-<Route
-  path="/client/feature-settings"
-  element={
-    <ClientRoute>
-      <ClientFeatureSettings />
-    </ClientRoute>
-  }
-/>
+          <Route
+            path="/client/feature-settings"
+            element={<ClientRoute><ClientFeatureSettings /></ClientRoute>}
+          />
         </Routes>
       </Router>
     </AuthProvider>
