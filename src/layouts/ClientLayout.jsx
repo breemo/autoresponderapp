@@ -2,6 +2,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { ChartBarIcon } from "@heroicons/react/24/outline";
 
 import {
   HomeIcon,
@@ -25,9 +26,10 @@ const menuItems = [
     icon: <ChatBubbleLeftRightIcon className="w-5 h-5" />,
   },
   {
-    to: "/client/Leads",
+    to: "/client/leads",
     label: "ارقام التواصل للزبائن",
-    key: "Leads" />,
+    key: "leads",
+    icon: <ChartBarIcon className="w-5 h-5" />,
   },
   {
     to: "/client/auto-replies",
