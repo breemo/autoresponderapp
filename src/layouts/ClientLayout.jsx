@@ -25,6 +25,11 @@ const menuItems = [
     icon: <ChatBubbleLeftRightIcon className="w-5 h-5" />,
   },
   {
+    to: "/client/Leads",
+    label: "ارقام التواصل للزبائن",
+    key: "Leads" />,
+  },
+  {
     to: "/client/auto-replies",
     label: "الردود التلقائية",
     key: "auto-replies",
