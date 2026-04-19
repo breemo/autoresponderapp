@@ -3,7 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import AdminPlanFeatures from "./pages/admin/AdminPlanFeatures.jsx";
-import ClientFeatureSettings from "./pages/client/ClientFeatureSettings.jsx";
+
 
 // Layouts
 import AdminLayout from "./layouts/AdminLayout.jsx";
@@ -28,6 +28,8 @@ import ClientMessages from "./pages/client/ClientMessages.jsx";
 import ClientAutoReplies from "./pages/client/ClientAutoReplies.jsx";
 import ClientSettings from "./pages/client/ClientSettings.jsx";
 import ClientIntegrations from "./pages/client/ClientIntegrations.jsx";
+import ClientFeatureSettings from "./pages/client/ClientFeatureSettings.jsx";
+import ClientLeads from "./pages/client/ClientLeads";
 
 // ----------- Route Guards -------------
 function AdminRoute({ children }) {
@@ -101,6 +103,7 @@ export default function App() {
             element={<ClientRoute><ClientMessages /></ClientRoute>}
           />
 
+          <Route path="/client/leads" element={<ClientLeads />} />
           
           <Route
             path="/client/auto-replies"
