@@ -102,9 +102,8 @@ export default function App() {
             path="/client/messages"
             element={<ClientRoute><ClientMessages /></ClientRoute>}
           />
+          <Route path="leads" element={<ClientLeads />} /> {}
 
-          <Route path="/client/leads" element={<ClientLeads />} />
-          
           <Route
             path="/client/auto-replies"
             element={<ClientRoute><ClientAutoReplies /></ClientRoute>}
