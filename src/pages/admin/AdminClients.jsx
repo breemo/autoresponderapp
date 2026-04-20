@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { Link } from "react-router-dom";
-import { useParams } from "react-router-dom";
 
 export default function AdminClients() {
-  const { id: clientId } = useParams();
-
   const [clients, setClients] = useState([]);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     business_name: "",
     email: "",
+    password: "",
     plan_id: "",
   });
 
@@ -30,8 +29,7 @@ export default function AdminClients() {
 
     const { data: clientsData, error } = await supabase
       .from("clients")
-      .select("id, business_name, email, plan_id, is_active, created_at")
-     /* .order("created_at", { ascending: false }); */
+      .select("id, business_name, email, plan_id, is_active, created_at");
 
     if (error) {
       console.error(error);
@@ -51,87 +49,155 @@ export default function AdminClients() {
     e.preventDefault();
     setMsg("");
 
-    if (!form.business_name || !form.email) {
-      setMsg("⚠️ يرجى إدخال الاسم التجاري والإيميل");
+    if (!form.business_name || !form.email || !form.password) {
+      setMsg("⚠️ يرجى إدخال الاسم التجاري والإيميل وكلمة المرور");
       return;
     }
 
-    const { error } = await supabase.from("clients").insert([
-      {
-        business_name: form.business_name,
-        email: form.email,
-        plan_id: form.plan_id || null,
-      },
-    ]);
+    setSubmitting(true);
 
-    if (error) {
-      console.error(error);
-      setMsg("❌ فشل في إضافة العميل");
-    } else {
-      setMsg("✅ تم إضافة العميل بنجاح");
-      setForm({ business_name: "", email: "", plan_id: "" });
+    let createdClient = null;
+    let createdUser = null;
+
+    try {
+      const normalizedEmail = form.email.trim().toLowerCase();
+
+      const { data: existingUser, error: existingUserError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", normalizedEmail)
+        .maybeSingle();
+
+      if (existingUserError) throw existingUserError;
+      if (existingUser) {
+        setMsg("⚠️ هذا الإيميل مستخدم مسبقًا في جدول المستخدمين");
+        return;
+      }
+
+      const { data: existingClient, error: existingClientError } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("email", normalizedEmail)
+        .maybeSingle();
+
+      if (existingClientError) throw existingClientError;
+      if (existingClient) {
+        setMsg("⚠️ هذا الإيميل مستخدم مسبقًا في جدول العملاء");
+        return;
+      }
+
+      const { data: clientData, error: clientError } = await supabase
+        .from("clients")
+        .insert([
+          {
+            business_name: form.business_name.trim(),
+            email: normalizedEmail,
+            plan_id: form.plan_id || null,
+          },
+        ])
+        .select("id, business_name, email, plan_id, is_active, created_at")
+        .single();
+
+      if (clientError) throw clientError;
+      createdClient = clientData;
+
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .insert([
+          {
+            email: normalizedEmail,
+            name: form.business_name.trim(),
+            role: "client",
+            password: form.password,
+          },
+        ])
+        .select("id")
+        .single();
+
+      if (userError) throw userError;
+      createdUser = userData;
+
+      const { error: linkError } = await supabase
+        .from("client_users")
+        .insert([
+          {
+            client_id: createdClient.id,
+            user_id: createdUser.id,
+          },
+        ]);
+
+      if (linkError) throw linkError;
+
+      setMsg("✅ تم إضافة العميل والمستخدم وربطهما بنجاح");
+      setForm({ business_name: "", email: "", password: "", plan_id: "" });
       fetchData();
+    } catch (error) {
+      console.error(error);
+
+      if (createdUser?.id) {
+        await supabase.from("users").delete().eq("id", createdUser.id);
+      }
+
+      if (createdClient?.id) {
+        await supabase.from("clients").delete().eq("id", createdClient.id);
+      }
+
+      setMsg(`❌ فشل في إضافة العميل كاملًا: ${error.message || "خطأ غير معروف"}`);
+    } finally {
+      setSubmitting(false);
     }
   };
-/*
-  const toggleStatus = async (id, currentRole) => {
-    const newRole = currentRole === "disabled" ? "client" : "disabled";
 
+  async function toggleStatus(id, currentStatus) {
     const { error } = await supabase
       .from("clients")
-      .update({ role: newRole })
+      .update({ is_active: !currentStatus })
       .eq("id", id);
 
     if (error) {
       console.error(error);
       setMsg("❌ فشل في تحديث حالة العميل");
-    } else {
-      setMsg("✅ تم تحديث الحالة");
-      fetchData();
+      return;
     }
-  };
-*/
 
-  async function toggleStatus(id, currentStatus) {
-  console.log("ID sent to Supabase:", id);
+    setMsg("✔️ تم تحديث حالة العميل بنجاح");
 
-  const { data, error } = await supabase
-    .from("clients")
-    .update({ is_active: !currentStatus })
-    .eq("id", id);
-
-  if (error) {
-    console.error(error);
-    setMsg("❌ فشل في تحديث حالة العميل");
-    return;
+    setClients((prev) =>
+      prev.map((c) =>
+        c.id === id ? { ...c, is_active: !currentStatus } : c
+      )
+    );
   }
-
-  setMsg("✔️ تم تحديث حالة العميل بنجاح");
-
-  // تحديث الواجهة مباشرة
-  setClients(prev =>
-    prev.map(c =>
-      c.id === id ? { ...c, is_active: !currentStatus } : c
-    )
-  );
-}
-
-
-
-
-  
 
   const deleteClient = async (id) => {
     if (!window.confirm("هل أنت متأكد من حذف هذا العميل؟")) return;
 
-    const { error } = await supabase.from("clients").delete().eq("id", id);
+    const targetClient = clients.find((c) => c.id === id);
+    const targetEmail = targetClient?.email || null;
 
-    if (error) {
-      console.error(error);
-      setMsg("❌ فشل في حذف العميل");
-    } else {
+    try {
+      if (targetEmail) {
+        const { data: linkedUser } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", targetEmail)
+          .maybeSingle();
+
+        if (linkedUser?.id) {
+          await supabase.from("client_users").delete().eq("client_id", id);
+          await supabase.from("users").delete().eq("id", linkedUser.id);
+        }
+      }
+
+      const { error } = await supabase.from("clients").delete().eq("id", id);
+
+      if (error) throw error;
+
       setMsg("🗑️ تم حذف العميل");
       fetchData();
+    } catch (error) {
+      console.error(error);
+      setMsg("❌ فشل في حذف العميل");
     }
   };
 
@@ -144,12 +210,11 @@ export default function AdminClients() {
     <div>
       <h1 className="text-2xl font-bold mb-4">إدارة العملاء</h1>
       <p className="text-gray-500 mb-6">
-        يمكنك إضافة عميل جديد، تفعيل/تعطيل، أو تعديل إعداداته.
+        يمكنك إضافة عميل جديد، وتفعيل/تعطيل، أو تعديل إعداداته.
       </p>
 
       {msg && <p className="mb-4 text-blue-700 font-semibold">{msg}</p>}
 
-      {/* فورم إضافة عميل */}
       <form
         onSubmit={addClient}
         className="bg-white shadow rounded-xl p-4 mb-8 flex flex-wrap gap-4 items-end"
@@ -177,6 +242,18 @@ export default function AdminClients() {
         </div>
 
         <div>
+          <label className="block text-sm mb-1">كلمة المرور</label>
+          <input
+            type="text"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            className="border rounded px-3 py-2 w-56"
+            placeholder="مثال: 12345"
+          />
+        </div>
+
+        <div>
           <label className="block text-sm mb-1">الخطة</label>
           <select
             name="plan_id"
@@ -195,13 +272,13 @@ export default function AdminClients() {
 
         <button
           type="submit"
-          className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700"
+          disabled={submitting}
+          className="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
         >
-          إضافة عميل
+          {submitting ? "جارِ الإضافة..." : "إضافة عميل"}
         </button>
       </form>
 
-      {/* جدول العملاء */}
       {loading ? (
         <p>جارِ تحميل العملاء...</p>
       ) : clients.length === 0 ? (
@@ -226,11 +303,10 @@ export default function AdminClients() {
                 <td className="p-3">{getPlanName(c.plan_id)}</td>
                 <td className="p-3">
                   {c.is_active ? (
-                      <span className="text-green-600 font-semibold">مفعّل</span>
-                    ) : (
-                      <span className="text-red-500 font-semibold">معطّل</span>
-                    )}
-
+                    <span className="text-green-600 font-semibold">مفعّل</span>
+                  ) : (
+                    <span className="text-red-500 font-semibold">معطّل</span>
+                  )}
                 </td>
                 <td className="p-3 text-center">
                   <Link
@@ -245,8 +321,8 @@ export default function AdminClients() {
                     onClick={() => toggleStatus(c.id, c.is_active)}
                     className={
                       c.is_active
-                        ? "bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mx-1"   // تعطيل
-                        : "bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 mx-1"       // تفعيل
+                        ? "bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 mx-1"
+                        : "bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500 mx-1"
                     }
                   >
                     {c.is_active ? "تعطيل" : "تفعيل"}
