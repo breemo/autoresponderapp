@@ -159,7 +159,6 @@ export default function ClientSettings() {
       const { error: updateError } = await supabase
         .from("client_feature_integrations")
         .update({
-          name: integration.name,
           is_active: integration.is_active,
           config: integration.config || {},
         })
@@ -186,7 +185,6 @@ export default function ClientSettings() {
         .insert({
           client_id: clientId,
           feature_id: feature.id,
-          name: feature.name,
           is_active: true,
           config: {}, // نملأه لاحقاً من الفورم
         })
