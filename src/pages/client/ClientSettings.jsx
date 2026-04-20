@@ -2,91 +2,159 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useAuth } from "../../context/AuthContext.jsx";
 
-
-
-export default function ClientIntegrations() {
+export default function ClientSettings() {
   const { user } = useAuth();
   const clientId = user?.client_id || user?.id;
-  const [features, setFeatures] = useState([]);
-  const [clientIntegrations, setClientIntegrations] = useState([]);
 
-  /* const clientId = JSON.parse(localStorage.getItem("user"))?.id; */
+  const [form, setForm] = useState({
+    business_name: "",
+    email: "",
+    phone: "",
+    address: "",
+    business_description: "",
+    password: ""
+  });
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadFeatures();
-    loadIntegrations();
+    loadClient();
   }, []);
 
-  async function loadFeatures() {
-    // جلب ميزات الباقة
-    const { data: plan } = await supabase
+  async function loadClient() {
+    const { data } = await supabase
       .from("clients")
-      .select("plan_id")
-      .eq("id", clientId)
-
-    setClientIntegrations(data || []);
-
-
-    const { data } = await supabase
-      .from("plan_features")
-      .select("features(id,name,slug,fields)")
-      .eq("plan_id", plan.plan_id);
-
-    setFeatures(data.map((x) => x.features));
-  }
-
-  async function loadIntegrations() {
-    const { data } = await supabase
-      .from("client_feature_integrations")
       .select("*")
-      .eq("client_id", clientId);
+      .eq("id", clientId)
+      .single();
 
-    setClientIntegrations(data || []);
+    if (data) {
+      setForm({
+        business_name: data.business_name || "",
+        email: data.email || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        business_description: data.business_description || "",
+        password: ""
+      });
+    }
   }
 
-  async function createIntegration(feature) {
-    await supabase.from("client_feature_integrations").insert({
-      client_id: clientId,
-      feature_id: feature.id,
-      name: feature.name,
-      values: {}
-    });
+  async function handleSave() {
+    setLoading(true);
 
-    loadIntegrations();
-  }
+    // تحديث بيانات العميل
+    await supabase
+      .from("clients")
+      .update({
+        business_name: form.business_name,
+        phone: form.phone,
+        address: form.address,
+        business_description: form.business_description
+      })
+      .eq("id", clientId);
 
-  function hasIntegration(featureId) {
-    return clientIntegrations.some((x) => x.feature_id === featureId);
+    // تحديث كلمة المرور إذا تم إدخالها
+    if (form.password) {
+      await supabase
+        .from("users")
+        .update({ password: form.password })
+        .eq("id", user.id);
+    }
+
+    setLoading(false);
+    alert("تم حفظ الإعدادات بنجاح ✅");
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">إعدادات التكامل (Integrations)</h1>
+    <div className="p-8 max-w-3xl">
+      <h1 className="text-2xl font-bold mb-6">إعدادات الحساب</h1>
 
-      {/* الميزات المتاحة */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {features.map((f) => (
-          <div
-            key={f.id}
-            className="p-4 bg-white shadow rounded border flex justify-between items-center"
-          >
-            <div>
-              <h2 className="font-bold">{f.name}</h2>
-              <p className="text-sm text-gray-500">{f.slug}</p>
-            </div>
+      <div className="bg-white p-6 rounded shadow space-y-4">
 
-            {!hasIntegration(f.id) ? (
-              <button
-                onClick={() => createIntegration(f)}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                تفعيل
-              </button>
-            ) : (
-              <span className="text-green-600 font-semibold">مفعّل ✓</span>
-            )}
-          </div>
-        ))}
+        {/* الاسم */}
+        <div>
+          <label className="block mb-1">اسم النشاط</label>
+          <input
+            value={form.business_name}
+            onChange={(e) =>
+              setForm({ ...form, business_name: e.target.value })
+            }
+            className="w-full border p-2 rounded"
+          />
+        </div>
+
+        {/* الايميل (disabled) */}
+        <div>
+          <label className="block mb-1">البريد الإلكتروني</label>
+          <input
+            value={form.email}
+            disabled
+            className="w-full border p-2 rounded bg-gray-100"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            لتعديل البريد الإلكتروني يرجى التواصل مع الإدارة
+          </p>
+        </div>
+
+        {/* الهاتف */}
+        <div>
+          <label className="block mb-1">رقم الهاتف</label>
+          <input
+            value={form.phone}
+            onChange={(e) =>
+              setForm({ ...form, phone: e.target.value })
+            }
+            className="w-full border p-2 rounded"
+          />
+        </div>
+
+        {/* العنوان */}
+        <div>
+          <label className="block mb-1">العنوان</label>
+          <input
+            value={form.address}
+            onChange={(e) =>
+              setForm({ ...form, address: e.target.value })
+            }
+            className="w-full border p-2 rounded"
+          />
+        </div>
+
+        {/* الوصف */}
+        <div>
+          <label className="block mb-1">نبذة عن النشاط</label>
+          <textarea
+            value={form.business_description}
+            onChange={(e) =>
+              setForm({ ...form, business_description: e.target.value })
+            }
+            className="w-full border p-2 rounded"
+          />
+        </div>
+
+        {/* الباسورد */}
+        <div>
+          <label className="block mb-1">كلمة المرور</label>
+          <input
+            type="password"
+            placeholder="اتركه فارغ إذا لا تريد تغييره"
+            value={form.password}
+            onChange={(e) =>
+              setForm({ ...form, password: e.target.value })
+            }
+            className="w-full border p-2 rounded"
+          />
+        </div>
+
+        {/* زر الحفظ */}
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="bg-blue-600 text-white px-6 py-2 rounded"
+        >
+          {loading ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+        </button>
       </div>
     </div>
   );
