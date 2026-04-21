@@ -254,6 +254,19 @@ async function openFeatureDrawer(feature) {
   const isAdmin = user?.role === "admin";
   const clientCanEdit = plan?.allow_self_edit === true;
 
+  const isTelegramFeature = activeFeature?.slug === "telegram";
+  const telegramBotToken = (featureValues["Bot Token"] || "").trim();
+  const telegramChannelKey = (featureValues["channelKey"] || "").trim();
+  const telegramWebhookBase = (import.meta.env.VITE_WEBHOOK_BASE_URL || "").trim().replace(/\/$/, "");
+  const telegramWebhookUrl =
+    isTelegramFeature && telegramWebhookBase && telegramChannelKey
+      ? `${telegramWebhookBase}/telegram/${telegramChannelKey}`
+      : "";
+  const telegramActivationLink =
+    isTelegramFeature && telegramBotToken && telegramWebhookUrl
+      ? `https://api.telegram.org/bot${telegramBotToken}/setWebhook?url=${encodeURIComponent(telegramWebhookUrl)}`
+      : "";
+
   return (
     <div>
       {loading ? (
@@ -372,6 +385,31 @@ async function openFeatureDrawer(feature) {
                 <p className="text-sm text-gray-500">
                   لا توجد حقول معرفة لهذه الميزة.
                 </p>
+              )}
+
+              {isTelegramFeature && (telegramWebhookUrl || telegramActivationLink) && (
+                <div className="mt-4 space-y-3">
+                  {telegramWebhookUrl && (
+                    <div className="bg-gray-100 rounded p-3 text-sm">
+                      <p className="mb-1 font-medium">Webhook URL</p>
+                      <div className="text-blue-700 break-all">{telegramWebhookUrl}</div>
+                    </div>
+                  )}
+
+                  {telegramActivationLink && (
+                    <div className="bg-gray-100 rounded p-3 text-sm">
+                      <p className="mb-1 font-medium">رابط تفعيل تيليجرام</p>
+                      <a
+                        href={telegramActivationLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-700 underline break-all"
+                      >
+                        {telegramActivationLink}
+                      </a>
+                    </div>
+                  )}
+                </div>
               )}
 
               <div className="flex gap-2 mt-6">
