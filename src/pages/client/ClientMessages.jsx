@@ -36,7 +36,7 @@ export default function ClientMessages() {
 
       const { data: messageRows, error: messageError } = await supabase
         .from("messages")
-        .select("conversation_id, message, created_at, direction, channel, sender")
+        .select("id, conversation_id, message, created_at, direction, channel, sender")
         .eq("client_id", clientId)
         .order("created_at", { ascending: false });
 
@@ -50,35 +50,77 @@ export default function ClientMessages() {
 
       if (leadError) throw leadError;
 
-      const latestMessageMap = new Map();
-      for (const msg of messageRows || []) {
-        if (!latestMessageMap.has(msg.conversation_id)) {
-          latestMessageMap.set(msg.conversation_id, msg);
+      const stateMap = new Map();
+      for (const state of stateRows || []) {
+        if (state.conversation_id) {
+          stateMap.set(state.conversation_id, state);
         }
       }
 
       const leadMap = new Map();
       for (const lead of leadRows || []) {
-        if (!leadMap.has(lead.conversation_id)) {
+        if (lead.conversation_id && !leadMap.has(lead.conversation_id)) {
           leadMap.set(lead.conversation_id, lead);
         }
       }
 
-      const merged = (stateRows || []).map((conv) => {
-        const latest = latestMessageMap.get(conv.conversation_id);
-        const lead = leadMap.get(conv.conversation_id);
+      const conversationMap = new Map();
 
-        return {
-          ...conv,
-          last_message: latest?.message || "",
-          last_message_at: latest?.created_at || conv.updated_at,
-          channel: latest?.channel || conv.platform || "",
-          sender: lead?.name || latest?.sender || conv.sender_id || "",
-          last_direction: latest?.direction || "",
+      // Build conversations from messages first, not from conversation_state only.
+      // This fixes missing conversations when state rows are missing/stale.
+      for (const msg of messageRows || []) {
+        if (!msg.conversation_id) continue;
+
+        if (!conversationMap.has(msg.conversation_id)) {
+          const state = stateMap.get(msg.conversation_id);
+          const lead = leadMap.get(msg.conversation_id);
+
+          conversationMap.set(msg.conversation_id, {
+            conversation_id: msg.conversation_id,
+            client_id: clientId,
+            sender_id: state?.sender_id || msg.sender || "",
+            platform: state?.platform || msg.channel || "",
+            conversation_status: state?.conversation_status || "active",
+            current_step: state?.current_step || null,
+            updated_at: state?.updated_at || msg.created_at,
+
+            last_message: msg.message || "",
+            last_message_at: msg.created_at,
+            channel: msg.channel || state?.platform || "",
+            sender: lead?.name || msg.sender || state?.sender_id || "",
+            last_direction: msg.direction || "",
+
+            lead_name: lead?.name || null,
+            lead_phone: lead?.phone || null,
+            has_lead: !!lead,
+          });
+        }
+      }
+
+      // Also include state-only conversations if they exist without messages.
+      for (const state of stateRows || []) {
+        if (!state.conversation_id) continue;
+        if (conversationMap.has(state.conversation_id)) continue;
+
+        const lead = leadMap.get(state.conversation_id);
+
+        conversationMap.set(state.conversation_id, {
+          ...state,
+          last_message: "",
+          last_message_at: state.updated_at,
+          channel: state.platform || "",
+          sender: lead?.name || state.sender_id || "",
+          last_direction: "",
           lead_name: lead?.name || null,
           lead_phone: lead?.phone || null,
           has_lead: !!lead,
-        };
+        });
+      }
+
+      const merged = Array.from(conversationMap.values()).sort((a, b) => {
+        const aTime = new Date(a.last_message_at || a.updated_at || 0).getTime();
+        const bTime = new Date(b.last_message_at || b.updated_at || 0).getTime();
+        return bTime - aTime;
       });
 
       setConversations(merged);
